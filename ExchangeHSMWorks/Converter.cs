@@ -245,7 +245,11 @@ namespace ExchangeHSMWorks
             return targetDB;
         }
 
-        //
+        /// <summary>
+        /// Export DataBase.
+        /// </summary>
+        /// <param name="db">Copy of the HSMAdvisor's database that you can dump or save</param>
+        /// <returns></returns>
         public object ExportTools(DataBase db)
         {
             throw new NotImplementedException();
@@ -276,11 +280,15 @@ namespace ExchangeHSMWorks
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Tell HSMAdvisor which methods are implemented and the method titles in the UI
+        /// </summary>
+        /// <returns></returns>
         List<Capability> HSMAdvisorPluginInterface.GetCapabilities()
         {
             var caps = new List<Capability>();
             caps.Add(new Capability("Import HSMWords Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools));
-
+                        
             return caps;
         }
     }
