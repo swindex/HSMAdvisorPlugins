@@ -35,12 +35,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HSMAdvisorPlugin">
-      <HintPath>..\..\HSMAdvisor\HSMAdvisorPlugin\bin\Release\HSMAdvisorPlugin.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\HSMAdvisorPlugin.dll</HintPath>
     </Reference>
     <Reference Include="ObjectToolDatabase">
-      <HintPath>..\..\HSMAdvisor\ObjectToolDatabase\bin\Release\ObjectToolDatabase.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\ObjectToolDatabase.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
