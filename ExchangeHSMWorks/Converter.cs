@@ -192,7 +192,7 @@ namespace ExchangeHSMWorks
         /// Read HSMWorks Tool Database file
         /// </summary>
         /// <returns></returns>
-        public DataBase ImportTools() 
+        public override DataBase ImportTools() 
         {
             var FileName = ShowSelectFileDialog();
 
@@ -250,7 +250,7 @@ namespace ExchangeHSMWorks
         /// </summary>
         /// <param name="db">Copy of the HSMAdvisor's database that you can dump or save</param>
         /// <returns></returns>
-        public object ExportTools(DataBase db)
+        public override void ExportTools(DataBase db)
         {
             throw new NotImplementedException();
            
@@ -275,7 +275,7 @@ namespace ExchangeHSMWorks
             return null;
         }
 
-        public object ModifyTools(DataBase db)
+        public override void ModifyTools(DataBase db)
         {
             throw new NotImplementedException();
         }
@@ -284,11 +284,11 @@ namespace ExchangeHSMWorks
         /// Tell HSMAdvisor which methods are implemented and the method titles in the UI
         /// </summary>
         /// <returns></returns>
-        List<Capability> HSMAdvisorPluginInterface.GetCapabilities()
+        public override List<Capability> GetCapabilities()
         {
             var caps = new List<Capability>();
             caps.Add(new Capability("Import HSMWords Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools));
-                        
+
             return caps;
         }
     }
