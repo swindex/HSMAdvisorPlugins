@@ -287,7 +287,7 @@ namespace ExchangeHSMWorks
         public override List<Capability> GetCapabilities()
         {
             var caps = new List<Capability>();
-            caps.Add(new Capability("Import HSMWords Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools));
+            caps.Add(new Capability("Import HSMWorks Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools));
 
             return caps;
         }
