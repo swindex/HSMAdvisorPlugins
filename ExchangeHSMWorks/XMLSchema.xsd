@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="XMLSchema"
+    targetNamespace="http://tempuri.org/XMLSchema.xsd"
+    elementFormDefault="qualified"
+    xmlns="http://tempuri.org/XMLSchema.xsd"
+    xmlns:mstns="http://tempuri.org/XMLSchema.xsd"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+    <xs:element name="tool-library">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="tool" maxOccurs="unbounded" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element type="xs:string" name="description"/>
+                <xs:element name="nc">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:byte" name="break-control" use="optional"/>
+                        <xs:attribute type="xs:byte" name="diameter-offset" use="optional"/>
+                        <xs:attribute type="xs:byte" name="length-offset" use="optional"/>
+                        <xs:attribute type="xs:byte" name="live-tool" use="optional"/>
+                        <xs:attribute type="xs:byte" name="manual-tool-change" use="optional"/>
+                        <xs:attribute type="xs:byte" name="number" use="optional"/>
+                        <xs:attribute type="xs:byte" name="turret" use="optional"/>
+                        <xs:attribute type="xs:byte" name="compensation-offset" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="coolant">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:string" name="mode" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="material">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:string" name="name" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="body" minOccurs="0">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:float" name="body-length" use="optional"/>
+                        <xs:attribute type="xs:string" name="coolant-support" use="optional"/>
+                        <xs:attribute type="xs:float" name="diameter" use="optional"/>
+                        <xs:attribute type="xs:float" name="flute-length" use="optional"/>
+                        <xs:attribute type="xs:byte" name="number-of-flutes" use="optional"/>
+                        <xs:attribute type="xs:float" name="overall-length" use="optional"/>
+                        <xs:attribute type="xs:float" name="shaft-diameter" use="optional"/>
+                        <xs:attribute type="xs:float" name="shoulder-length" use="optional"/>
+                        <xs:attribute type="xs:byte" name="taper-angle" use="optional"/>
+                        <xs:attribute type="xs:float" name="thread-pitch" use="optional"/>
+                        <xs:attribute type="xs:byte" name="thread-profile-angle" use="optional"/>
+                        <xs:attribute type="xs:float" name="corner-radius" use="optional"/>
+                        <xs:attribute type="xs:byte" name="taper-angle2" use="optional"/>
+                        <xs:attribute type="xs:float" name="tip-diameter" use="optional"/>
+                        <xs:attribute type="xs:float" name="tip-length" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="holder" minOccurs="0">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="section" maxOccurs="unbounded" minOccurs="0">
+                        <xs:complexType>
+                          <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                              <xs:attribute type="xs:float" name="diameter" use="optional"/>
+                              <xs:attribute type="xs:float" name="length" use="optional"/>
+                            </xs:extension>
+                          </xs:simpleContent>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:sequence>
+                    <xs:attribute type="xs:string" name="description" use="optional"/>
+                    <xs:attribute type="xs:string" name="product-id" use="optional"/>
+                    <xs:attribute type="xs:string" name="vendor" use="optional"/>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="insert" minOccurs="0">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:float" name="corner-radius" use="optional"/>
+                        <xs:attribute type="xs:string" name="cross-section" use="optional"/>
+                        <xs:attribute type="xs:float" name="diameter" use="optional"/>
+                        <xs:attribute type="xs:byte" name="groove-width" use="optional"/>
+                        <xs:attribute type="xs:float" name="head-length" use="optional"/>
+                        <xs:attribute type="xs:float" name="insert-width" use="optional"/>
+                        <xs:attribute type="xs:string" name="internal-thread" use="optional"/>
+                        <xs:attribute type="xs:byte" name="overall-length" use="optional"/>
+                        <xs:attribute type="xs:byte" name="relief-angle" use="optional"/>
+                        <xs:attribute type="xs:string" name="shape" use="optional"/>
+                        <xs:attribute type="xs:float" name="thickness" use="optional"/>
+                        <xs:attribute type="xs:byte" name="thread-pitch" use="optional"/>
+                        <xs:attribute type="xs:byte" name="tip-angle" use="optional"/>
+                        <xs:attribute type="xs:string" name="tolerance" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="turning-holder" minOccurs="0">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:string" name="clamping" use="optional"/>
+                        <xs:attribute type="xs:byte" name="cutting-width" use="optional"/>
+                        <xs:attribute type="xs:float" name="diameter" use="optional"/>
+                        <xs:attribute type="xs:string" name="hand" use="optional"/>
+                        <xs:attribute type="xs:byte" name="head-length" use="optional"/>
+                        <xs:attribute type="xs:byte" name="overall-length" use="optional"/>
+                        <xs:attribute type="xs:byte" name="relief-angle" use="optional"/>
+                        <xs:attribute type="xs:string" name="round-shank" use="optional"/>
+                        <xs:attribute type="xs:byte" name="shank-height" use="optional"/>
+                        <xs:attribute type="xs:byte" name="shank-width" use="optional"/>
+                        <xs:attribute type="xs:string" name="shape" use="optional"/>
+                        <xs:attribute type="xs:byte" name="side-angle" use="optional"/>
+                        <xs:attribute type="xs:string" name="style" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="turning-setup" minOccurs="0">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:string" name="compensation" use="optional"/>
+                        <xs:attribute type="xs:string" name="right-spindle" use="optional"/>
+                        <xs:attribute type="xs:byte" name="tool-angle" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="motion">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:string" name="clockwise" use="optional"/>
+                        <xs:attribute type="xs:float" name="cutting-feedrate" use="optional"/>
+                        <xs:attribute type="xs:float" name="entry-feedrate" use="optional"/>
+                        <xs:attribute type="xs:float" name="exit-feedrate" use="optional"/>
+                        <xs:attribute type="xs:string" name="feed-mode" use="optional"/>
+                        <xs:attribute type="xs:float" name="plunge-feedrate" use="optional"/>
+                        <xs:attribute type="xs:float" name="ramp-feedrate" use="optional"/>
+                        <xs:attribute type="xs:short" name="ramp-spindle-rpm" use="optional"/>
+                        <xs:attribute type="xs:byte" name="retract-feedrate" use="optional"/>
+                        <xs:attribute type="xs:short" name="spindle-rpm" use="optional"/>
+                        <xs:attribute type="xs:int" name="surface-speed" use="optional"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="presets">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="preset">
+                        <xs:complexType>
+                          <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                              <xs:attribute type="xs:string" name="description" use="optional"/>
+                              <xs:attribute type="xs:string" name="id" use="optional"/>
+                              <xs:attribute type="xs:string" name="name" use="optional"/>
+                              <xs:attribute type="xs:string" name="tool_coolant" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedPlunge" use="optional"/>
+                              <xs:attribute type="xs:short" name="tool_feedRetract" use="optional"/>
+                              <xs:attribute type="xs:short" name="tool_spindleSpeed" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedCutting" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedEntry" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedExit" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedRamp" use="optional"/>
+                              <xs:attribute type="xs:short" name="tool_rampSpindleSpeed" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedCuttingRel" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedEntryRel" use="optional"/>
+                              <xs:attribute type="xs:float" name="tool_feedExitRel" use="optional"/>
+                              <xs:attribute type="xs:int" name="tool_surfaceSpeed" use="optional"/>
+                              <xs:attribute type="xs:string" name="tool_useConstantSurfaceSpeed" use="optional"/>
+                              <xs:attribute type="xs:string" name="tool_useFeedPerRevolution" use="optional"/>
+                            </xs:extension>
+                          </xs:simpleContent>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:sequence>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+              <xs:attribute type="xs:string" name="guid" use="optional"/>
+              <xs:attribute type="xs:string" name="type" use="optional"/>
+              <xs:attribute type="xs:string" name="unit" use="optional"/>
+              <xs:attribute type="xs:float" name="version" use="optional"/>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+        <xs:attribute type="xs:float" name="version"/>
+      </xs:complexType>
+    </xs:element>
+  
+</xs:schema>
