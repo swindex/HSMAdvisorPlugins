@@ -67,10 +67,15 @@ namespace ExchangeHSMWorks
         public toollibraryToolHolder holder { get; set; }
 
         /// <remarks/>
+        public toollibraryToolShaft shaft { get; set; }
+
+        /// <remarks/>
         public toollibraryToolMotion motion { get; set; }
 
         /// <remarks/>
-        public List<toollibraryToolPresets> presets { get; set; } = new List<toollibraryToolPresets>();
+        [System.Xml.Serialization.XmlArray("presets")]
+        [System.Xml.Serialization.XmlArrayItem("preset")]
+        public List<toollibraryToolPreset> presets { get; set; } = new List<toollibraryToolPreset>();
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -338,6 +343,11 @@ namespace ExchangeHSMWorks
         public string numberofflutes { get; set; }
 
         /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute("number-of-teeth")]
+        public string numberoffteeth { get; set; }
+
+
+        /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute("overall-length")]
         public string overalllength { get; set; }
 
@@ -426,6 +436,18 @@ namespace ExchangeHSMWorks
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://www.hsmworks.com/xml/2004/cnc/tool-library")]
+    public partial class toollibraryToolShaft
+    {
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("section")]
+        public List<toollibraryToolHolderSection> section { get; set; } = new List<toollibraryToolHolderSection>();
+    }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://www.hsmworks.com/xml/2004/cnc/tool-library")]
     public partial class toollibraryToolHolderSection
     {
 
@@ -498,6 +520,7 @@ namespace ExchangeHSMWorks
         public bool surfacespeedSpecified { get; set; }
     }
 
+    /*
     /// <remarks/>
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -507,13 +530,13 @@ namespace ExchangeHSMWorks
 
         /// <remarks/>
         public toollibraryToolPresetsPreset preset { get; set; }
-    }
+    }*/
 
     /// <remarks/>
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://www.hsmworks.com/xml/2004/cnc/tool-library")]
-    public partial class toollibraryToolPresetsPreset
+    public partial class toollibraryToolPreset
     {
 
         /// <remarks/>

@@ -3,6 +3,7 @@ using ObjectToolDatabase;
 using ObjectToolDatabase.ToolDataBase;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -26,11 +27,25 @@ namespace ExchangeHSMWorks
                     return Enums.ToolMaterials.HSS;
             }
         }
+        public static string FromToolMaterial(Enums.ToolMaterials material_id)
+        {
+            switch (material_id)
+            {
+                case Enums.ToolMaterials.Carbide:
+                    return "carbide";
+                case Enums.ToolMaterials.Ceramic:
+                    return "ceramics";
+                case Enums.ToolMaterials.HSCobalt:
+                    return "cobalt";
+                case Enums.ToolMaterials.HSS:
+                default:
+                    return "hss";
+            }
+        }
         public static Tool ToTool( toollibraryTool t )
         {
             Tool ret = new Tool(true)
             {
-                Type = Enums.ToolTypeNames.endmill,
                 Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
                 Coating_id = Convert.ToInt32(Enums.ToolCoatings.None),
                 Tool_material_id = Convert.ToInt32(ToToolMaterial(t.material.name)),
@@ -49,7 +64,7 @@ namespace ExchangeHSMWorks
                 Offset_Diameter = Parse.ToInteger(t.nc.diameteroffset),
                 Offset_Length = Parse.ToInteger(t.nc.lengthoffset),
 
-                Aux_data = Serializer.ToXML(t),
+                Aux_data = Serializer.ToXML(t, "UTF-16"),
 
                 Circle_dia_m = t.unit == "millimeters",
                 Depth_m = t.unit == "millimeters",
@@ -94,11 +109,18 @@ namespace ExchangeHSMWorks
             ret.Maxtorque_pc = -1;
             ret.Productivity = -1;
 
+            //override type
             switch (t.type) {
                 case "flat end mill":
                 case "bull nose end mill":
                 case "tapered mill":
                 case "radius mill":
+                    //Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
+                    break;
+                case "thread mill":
+                    ret.Type = Enums.ToolTypeNames.threadmill;
+                    ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
+                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.ThreadMill);
                     break;
                 case "ball end mill":
                 case "lollipop mill":
@@ -124,6 +146,7 @@ namespace ExchangeHSMWorks
                     ret.Flute_N = 2;
                     break;
                 case "spot drill":
+                    ret.Type = Enums.ToolTypeNames.drill;
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.SpotDrill);
                     ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Tip);
                     ret.Flute_N = 2;
@@ -140,11 +163,10 @@ namespace ExchangeHSMWorks
                     break;
                 case "boring bar":
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.BoringHead);
-                    ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
+                  
                     break;
                 case "turning threading":
                 case "turning general":
-                    ret.Type = Enums.ToolTypeNames.turn;
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.TurningProfiling);
                     //ret.Thread_pitch = t.body.threadpitch;
                     ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
@@ -154,7 +176,6 @@ namespace ExchangeHSMWorks
                     ret.Flute_N = 1;
                     break;
                 case "turning boring":
-                    ret.Type = Enums.ToolTypeNames.turn;
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.BoringBar);
                     //ret.Thread_pitch = t.body.threadpitch;
                     ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
@@ -164,7 +185,6 @@ namespace ExchangeHSMWorks
                     ret.Flute_N = 1;
                     break;
                 case "turning grooving":
-                    ret.Type = Enums.ToolTypeNames.turn;
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.TurningProfiling);
                     
                     //ret.Thread_pitch = t.body.threadpitch;
@@ -194,7 +214,7 @@ namespace ExchangeHSMWorks
         /// <returns></returns>
         public override DataBase ImportTools() 
         {
-            var FileName = ShowSelectFileDialog();
+            var FileName = ShowOpenFileDialog();
 
             if (FileName == null)
             {
@@ -241,6 +261,12 @@ namespace ExchangeHSMWorks
                 }
             });
 
+            Debug.WriteLine(targetDB.Tools[0].Aux_data);
+
+            var tt = Serializer.FromXML<toollibraryTool>(targetDB.Tools[0].Aux_data, false);
+
+            Debug.WriteLine(Serializer.ToXML(tt));
+
             //return new database. HSMAdvisor will SAFELY merge it into it's current database
             return targetDB;
         }
@@ -250,13 +276,192 @@ namespace ExchangeHSMWorks
         /// </summary>
         /// <param name="db">Copy of the HSMAdvisor's database that you can dump or save</param>
         /// <returns></returns>
-        public override void ExportTools(DataBase db)
+        public override void ExportTools(DataBase src)
         {
-            throw new NotImplementedException();
-           
+            if (src == null)
+            {
+                throw new Exception("Source DataBase is not specified!");
+            }
+
+
+            var FileName = ShowSaveAsFileDialog();
+
+            if (FileName == null)
+            {
+                return;
+            }
+            //read xml from our source file
+            //var xml = File.ReadAllText(FileName);
+
+            //Create a new database
+            toollibrary targetDB = new toollibrary();
+
+            
+            //Add tools one by one
+            src.Tools.ToList().ForEach(srcTool =>
+            {
+                var tool = FromTool(srcTool);
+               
+                targetDB.tool.Add(tool);
+
+                //add holder if it has one
+                /*if (srcTool.holder != null)
+                {
+                    var holder = targetDB.Holders.FirstOrDefault(e => e.Comment == srcTool.holder.description && e.Library == tool.Library);
+                    if (holder != null)
+                        targetDB.Holders.Remove(holder);
+
+                    targetDB.Holders.Add(new Holder()
+                    {
+                        Library = tool.Library,
+                        Units_m = srcTool.unit == "millimeters",
+                        Comment = srcTool.holder.description,
+                        Brand_name = srcTool.holder.vendor,
+                        Series_name = srcTool.holder.productid,
+                        Shank_Dia = Parse.ToDouble(srcTool.body.shaftdiameter)
+                    });
+                }*/
+            });
+            File.WriteAllText(FileName, Serializer.ToXML(targetDB, "UTF-16"));
         }
 
-        public string ShowSelectFileDialog()
+        private toollibraryTool FromTool(Tool srcTool)
+        {
+
+            toollibraryTool ret = new toollibraryTool();
+            if (!string.IsNullOrEmpty(srcTool.Aux_data))
+            {
+                try
+                {
+                    ret = Serializer.FromXML<toollibraryTool>(srcTool.Aux_data, false);
+                } catch (Exception ex) {
+                    Debug.WriteLine(ex);
+                }
+            }
+
+            if (ret.material == null)
+                ret.material = new toollibraryToolMaterial();
+
+            ret.material.name = FromToolMaterial((Enums.ToolMaterials)srcTool.Tool_material_id);
+            ret.guid = srcTool.Guid;
+
+            ret.description = srcTool.Comment;
+
+
+            ret.manufacturer = srcTool.Brand_name;
+            ret.productid = srcTool.Series_name;
+            ret.productlink = srcTool.Product_link;
+
+
+            if (ret.nc == null)
+                ret.nc = new toollibraryToolNC();
+            ret.nc.number = Parse.ToString(srcTool.Number);
+
+            ret.nc.diameteroffset = Parse.ToString(srcTool.Offset_Diameter);
+            ret.nc.lengthoffset = Parse.ToString(srcTool.Offset_Length);
+
+            ret.unit = srcTool.Input_units_m ? "millimeters" : "inches";
+
+            if (ret.body == null)
+                ret.body = new toollibraryToolBody();
+
+            ret.body.diameter = Parse.ToString(srcTool.Diameter);
+            ret.body.cornerradius = Parse.ToString(srcTool.Corner_rad);
+            ret.body.bodylength = Parse.ToString(srcTool.Stickout);
+            ret.body.flutelength = Parse.ToString(srcTool.Flute_Len);
+            ret.body.shoulderlength = Parse.ToString(srcTool.Shoulder_Len);
+            ret.body.shaftdiameter = Parse.ToString(srcTool.Shank_Dia);
+            ret.body.numberofflutes = Parse.ToString(srcTool.Flute_N);
+            ret.body.taperangle = Parse.ToString(90 - srcTool.Leadangle);
+
+            //override type ONLY if none is specified by AUX_DATA
+            if (string.IsNullOrEmpty(ret.type)) {
+                switch ((Enums.ToolTypes)srcTool.Name_id)
+                {
+                    case Enums.ToolTypes.SolidEndMill:
+                        ret.type = "flat end mill";
+                    
+                        break;
+                    case Enums.ToolTypes.ThreadMill:
+                        ret.type = "thread mill";
+                        ret.body.threadpitch = Parse.ToString(srcTool.Thread_pitch);
+                        ret.body.numberoffteeth = Parse.ToString((int)(srcTool.Flute_Len / srcTool.Thread_pitch));
+                        break;
+                    case Enums.ToolTypes.SolidBallMill:
+                        ret.type = "ball end mill";
+                        break;
+                    case Enums.ToolTypes.IndexedFaceMill:
+                        ret.type = "face mill";
+                        break;
+                    case Enums.ToolTypes.WoodRuff:
+                        ret.type = "slot mill";
+                        break;
+                    case Enums.ToolTypes.ChamferMill:
+                        ret.type = "chamfer mill";
+                        ret.body.tipdiameter = Parse.ToString(srcTool.Diameter);
+                        ret.body.diameter = Parse.ToString(srcTool.Shank_Dia);
+
+                        break;
+                    //case "center drill":
+                    case Enums.ToolTypes.JobberTwistDrill:
+                        ret.type = "drilll";
+                        break;
+                    case Enums.ToolTypes.SpotDrill:
+                        ret.type = "spot drill";
+                        break;
+                    //"tap left hand":
+                    case Enums.ToolTypes.Tap:
+                        ret.type = "tap right hand"; //"tap left hand":
+                        ret.body.threadpitch = Parse.ToString(srcTool.Thread_pitch);
+                        break;
+                    case Enums.ToolTypes.BoringHead:
+                        ret.type = "boring bar";
+                        break;
+                    //case "turning threading":
+                    case Enums.ToolTypes.TurningProfiling:
+                        ret.type = "turning general";
+                        if (ret.turningholder == null)
+                            ret.turningholder = new toollibraryToolTurningholder();
+
+                        ret.turningholder.shankheight = Parse.ToString(srcTool.Shank_Dia);
+                        ret.turningholder.headlength = Parse.ToString(srcTool.Stickout);
+                        if (ret.insert == null)
+                            ret.insert = new toollibraryToolInsert();
+                        ret.insert.cornerradius = Parse.ToString(srcTool.Corner_rad);
+
+                        break;
+                    case Enums.ToolTypes.BoringBar:
+                        ret.type = "turning boring";
+
+                        if (ret.turningholder == null)
+                            ret.turningholder = new toollibraryToolTurningholder();
+                        ret.turningholder.shankheight = Parse.ToString(srcTool.Shank_Dia);
+                        ret.turningholder.headlength = Parse.ToString(srcTool.Stickout);
+                        if (ret.insert == null)
+                            ret.insert = new toollibraryToolInsert();
+                        ret.insert.cornerradius = Parse.ToString(srcTool.Corner_rad);
+
+                        break;
+                    case Enums.ToolTypes.TurningGrooving:
+                        ret.type = "turning grooving";
+
+                        if (ret.turningholder == null)
+                            ret.turningholder = new toollibraryToolTurningholder();
+                        ret.turningholder.shankheight = Parse.ToString(srcTool.Shank_Dia);
+                        ret.turningholder.headlength = Parse.ToString(srcTool.Stickout);
+
+                        if (ret.insert == null)
+                            ret.insert = new toollibraryToolInsert();
+                        ret.insert.cornerradius = Parse.ToString(srcTool.Corner_rad);
+
+                        break;
+
+                }
+            }
+            return ret;
+        }
+
+        public string ShowOpenFileDialog()
         {
             var OpenFileDialog1 = new System.Windows.Forms.OpenFileDialog();
 
@@ -269,7 +474,27 @@ namespace ExchangeHSMWorks
             OpenFileDialog1.CheckFileExists = true;
 
             var ret = OpenFileDialog1.ShowDialog();
-            if (ret == System.Windows.Forms.DialogResult.OK && File.Exists(OpenFileDialog1.FileName)) {
+            if (ret == System.Windows.Forms.DialogResult.OK &&  File.Exists(OpenFileDialog1.FileName)) {
+                return OpenFileDialog1.FileName;
+            }
+            return null;
+        }
+
+        public string ShowSaveAsFileDialog()
+        {
+            var OpenFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+
+            OpenFileDialog1.FileName = "";
+            OpenFileDialog1.Title = "Save HSMWorks tool database into file";
+            OpenFileDialog1.Filter = this.GetReadFileFilter();
+
+            OpenFileDialog1.AddExtension = true;
+            OpenFileDialog1.SupportMultiDottedExtensions = true;
+            //OpenFileDialog1.Exi = true;
+
+            var ret = OpenFileDialog1.ShowDialog();
+            if (ret == System.Windows.Forms.DialogResult.OK )
+            {
                 return OpenFileDialog1.FileName;
             }
             return null;
@@ -288,6 +513,7 @@ namespace ExchangeHSMWorks
         {
             var caps = new List<Capability>();
             caps.Add(new Capability("Import HSMWorks Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools));
+            caps.Add(new Capability("Export HSMWorks Tool Database", (int)ToolsPluginCapabilityMethod.ExportTools));
 
             return caps;
         }

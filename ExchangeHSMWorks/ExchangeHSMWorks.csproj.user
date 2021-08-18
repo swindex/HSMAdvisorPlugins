@@ -4,8 +4,14 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartWorkingDirectory>
+    </StartWorkingDirectory>
+    <StartAction>Project</StartAction>
+    <StartProgram>C:\Program Files %28x86%29\HSMAdvisor\HSMAdvisor.exe</StartProgram>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-HSMAdvisor|AnyCPU'">
+    <StartProgram>C:\Program Files %28x86%29\HSMAdvisor\HSMAdvisor.exe</StartProgram>
     <StartWorkingDirectory>C:\Program Files %28x86%29\HSMAdvisor\</StartWorkingDirectory>
     <StartAction>Program</StartAction>
-    <StartProgram>C:\Program Files %28x86%29\HSMAdvisor\HSMAdvisor.exe</StartProgram>
   </PropertyGroup>
 </Project>
