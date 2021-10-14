@@ -43,13 +43,8 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HSMAdvisorPlugin">
-      <HintPath>..\HSMAdvisorPlugin.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ObjectToolDatabase">
-      <HintPath>..\ObjectToolDatabase.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="HSMAdvisorCore">
+      <HintPath>..\HSMAdvisorCore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
