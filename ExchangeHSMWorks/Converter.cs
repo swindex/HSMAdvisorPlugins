@@ -1,6 +1,6 @@
 ﻿using HSMAdvisorPlugin;
-using ObjectToolDatabase;
-using ObjectToolDatabase.ToolDataBase;
+using HSMAdvisorDatabase;
+using HSMAdvisorDatabase.ToolDataBase;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

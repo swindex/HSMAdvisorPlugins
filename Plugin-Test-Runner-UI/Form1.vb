@@ -3,7 +3,7 @@ Imports HSMAdvisorPlugin
 
 Public Class Form1
 
-    Private currDataBase As ObjectToolDatabase.ToolDataBase.DataBase
+    Private currDataBase As HSMAdvisorDatabase.ToolDataBase.DataBase
 
     Private _plugins As List(Of HSMAdvisorPluginInterface)
     Public Property Plugins() As List(Of HSMAdvisorPluginInterface)
@@ -88,19 +88,19 @@ Public Class Form1
 
             Dim cap = TryCast(list_methods.SelectedItem, Capability)
 
-            If TypeOf plugin Is ObjectToolDatabase.ToolsPluginInterface Then
-                Dim tPlugin = TryCast(plugin, ObjectToolDatabase.ToolsPluginInterface)
+            If TypeOf plugin Is HSMAdvisorDatabase.ToolsPluginInterface Then
+                Dim tPlugin = TryCast(plugin, HSMAdvisorDatabase.ToolsPluginInterface)
 
                 Select Case cap.CapabilityMethod
-                    Case ObjectToolDatabase.ToolsPluginCapabilityMethod.ImportTools
+                    Case HSMAdvisorDatabase.ToolsPluginCapabilityMethod.ImportTools
                         MessageBox.Show("Calling ImportTools")
                         currDataBase = tPlugin.ImportTools()
                         PGrid.SelectedObject = currDataBase
 
-                    Case ObjectToolDatabase.ToolsPluginCapabilityMethod.ExportTools
+                    Case HSMAdvisorDatabase.ToolsPluginCapabilityMethod.ExportTools
                         MessageBox.Show("Calling ExportTools with current database")
                         tPlugin.ExportTools(currDataBase)
-                    Case ObjectToolDatabase.ToolsPluginCapabilityMethod.ModifyTools
+                    Case HSMAdvisorDatabase.ToolsPluginCapabilityMethod.ModifyTools
                         MessageBox.Show("Calling ModifyTools")
 
                 End Select
