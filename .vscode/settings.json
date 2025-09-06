@@ -22,7 +22,6 @@
     "dotnet.defaultSolution": "HSMAdvisor-Plugins.sln",
     "omnisharp.defaultLaunchSolution": "HSMAdvisor-Plugins.sln",
     "omnisharp.enableEditorConfigSupport": true,
-    "omnisharp.enableImportCompletion": true,
     "omnisharp.enableRoslynAnalyzers": true,
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -37,5 +36,7 @@
         ".csproj",
         ".vbproj",
         ".sln"
-    ]
+    ],
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "dotnet.preferCSharpExtension": true
 }

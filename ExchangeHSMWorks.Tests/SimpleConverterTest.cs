@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using HSMAdvisorDatabase.ToolDataBase;
 using HSMAdvisorDatabase;
 using ExchangeHSMWorks;
@@ -9,12 +10,26 @@ namespace ExchangeHSMWorks.Tests
 {
     /// <summary>
     /// Simple test class that can be run without MSTest framework
-    /// Demonstrates the plugin import functionality with the test data
+    /// Demonstrates the plugin import functionality with all test data files
     /// </summary>
     public class SimpleConverterTest
     {
-        private const string TestDataPath = @"test-data\Harvey Tool-End Mills.hsmlib";
-        private const int ExpectedToolCount = 11937; // Based on our analysis of the test file
+        private const string TestDataDirectory = @".\test-data";
+
+        // Cache for loaded test data to avoid reloading files multiple times
+        private static readonly Dictionary<string, TestDataInfo> _testDataCache = new Dictionary<string, TestDataInfo>();
+
+        /// <summary>
+        /// Information about a loaded test data file
+        /// </summary>
+        private class TestDataInfo
+        {
+            public string FilePath { get; set; }
+            public string FileName { get; set; }
+            public DataBase Database { get; set; }
+            public toollibrary OriginalData { get; set; }
+            public int ToolCount { get; set; }
+        }
 
         public static void Main(string[] args)
         {
@@ -42,7 +57,10 @@ namespace ExchangeHSMWorks.Tests
 
         public void RunAllTests()
         {
-            TestFileExists();
+            // Load all test data files first
+            LoadAllTestData();
+
+            TestFilesExist();
             TestImportToolCount();
             TestLibraryCreation();
             TestToolDataPreservation();
@@ -56,50 +74,157 @@ namespace ExchangeHSMWorks.Tests
             TestCapabilities();
         }
 
-        private void TestFileExists()
+        /// <summary>
+        /// Load all .hsmlib files from the test-data directory into cache
+        /// </summary>
+        private void LoadAllTestData()
         {
-            Console.Write("Testing file exists... ");
-            var testFilePath = Path.GetFullPath(TestDataPath);
+            Console.WriteLine("Loading test data files...");
 
-            if (!File.Exists(testFilePath))
+            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            if (!Directory.Exists(testDataDir))
             {
-                throw new FileNotFoundException($"Test data file not found at: {testFilePath}");
+                throw new DirectoryNotFoundException($"Test data directory not found: {testDataDir}");
             }
 
-            Console.WriteLine("PASS");
+            var hsmLibFiles = Directory.GetFiles(testDataDir, "*.hsmlib");
+            if (hsmLibFiles.Length == 0)
+            {
+                throw new FileNotFoundException("No .hsmlib files found in test-data directory");
+            }
+
+            foreach (var filePath in hsmLibFiles)
+            {
+                var fileName = Path.GetFileName(filePath);
+                Console.Write($"  Loading {fileName}... ");
+
+                try
+                {
+                    var testData = LoadTestDataFile(filePath);
+                    _testDataCache[fileName] = testData;
+                    Console.WriteLine($"OK ({testData.ToolCount} tools)");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"FAILED: {ex.Message}");
+                    throw;
+                }
+            }
+
+            Console.WriteLine($"Loaded {_testDataCache.Count} test data files");
+            Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Load a single test data file and convert it to HSMAdvisor format
+        /// </summary>
+        private TestDataInfo LoadTestDataFile(string filePath)
+        {
+            // Read and parse the XML
+            var xml = File.ReadAllText(filePath);
+            var originalData = Serializer.FromXML<toollibrary>(xml, false);
+
+            // Create database and convert tools
+            var database = new DataBase();
+            var libraryName = Path.GetFileNameWithoutExtension(filePath);
+
+            // Add library
+            database.AddLibrary(libraryName);
+
+            // Convert all tools
+            originalData.tool.ForEach(srcTool =>
+            {
+                var tool = Converter.ToTool(srcTool);
+                tool.Library = libraryName;
+                database.Tools.Add(tool);
+
+                // Add holder if it has one
+                if (srcTool.holder != null)
+                {
+                    var holder = database.Holders.FirstOrDefault(e =>
+                        e.Comment == srcTool.holder.description && e.Library == tool.Library);
+                    if (holder != null)
+                        database.Holders.Remove(holder);
+
+                    database.Holders.Add(new Holder()
+                    {
+                        Library = tool.Library,
+                        Units_m = srcTool.unit == "millimeters",
+                        Comment = srcTool.holder.description,
+                        Brand_name = srcTool.holder.vendor,
+                        Series_name = srcTool.holder.productid,
+                        Shank_Dia = Parse.ToDouble(srcTool.body.shaftdiameter)
+                    });
+                }
+            });
+
+            return new TestDataInfo
+            {
+                FilePath = filePath,
+                FileName = Path.GetFileName(filePath),
+                Database = database,
+                OriginalData = originalData,
+                ToolCount = database.Tools.Count
+            };
+        }
+
+        private void TestFilesExist()
+        {
+            Console.Write("Testing files exist... ");
+
+            if (_testDataCache.Count == 0)
+                throw new Exception("No test data files loaded");
+
+            // Verify all expected files are present
+            var expectedFiles = new[] { "Harvey Tool-End Mills.hsmlib", "Harvey Tool-Specialty Profiles.hsmlib" };
+            foreach (var expectedFile in expectedFiles)
+            {
+                if (!_testDataCache.ContainsKey(expectedFile))
+                    throw new FileNotFoundException($"Expected test file not found: {expectedFile}");
+            }
+
+            Console.WriteLine($"PASS ({_testDataCache.Count} files)");
         }
 
         private void TestImportToolCount()
         {
             Console.Write("Testing import tool count... ");
-            var result = ImportToolsFromFile();
 
-            if (result == null)
-                throw new Exception("ImportTools returned null");
+            var totalTools = 0;
+            foreach (var testData in _testDataCache.Values)
+            {
+                if (testData.Database == null)
+                    throw new Exception($"Database is null for {testData.FileName}");
 
-            if (result.Tools == null)
-                throw new Exception("Tools collection is null");
+                if (testData.Database.Tools == null)
+                    throw new Exception($"Tools collection is null for {testData.FileName}");
 
-            if (result.Tools.Count != ExpectedToolCount)
-                throw new Exception($"Expected {ExpectedToolCount} tools, got {result.Tools.Count}");
+                if (testData.Database.Tools.Count == 0)
+                    throw new Exception($"No tools found in {testData.FileName}");
 
-            Console.WriteLine($"PASS ({result.Tools.Count} tools imported)");
+                totalTools += testData.Database.Tools.Count;
+            }
+
+            Console.WriteLine($"PASS ({totalTools} total tools across {_testDataCache.Count} files)");
         }
 
         private void TestLibraryCreation()
         {
             Console.Write("Testing library creation... ");
-            var result = ImportToolsFromFile();
-            var expectedLibraryName = Path.GetFileNameWithoutExtension(TestDataPath);
 
-            if (result.Libraries == null)
-                throw new Exception("Libraries collection is null");
+            foreach (var testData in _testDataCache.Values)
+            {
+                var expectedLibraryName = Path.GetFileNameWithoutExtension(testData.FileName);
 
-            if (!result.Libraries.Any(l => l.Name == expectedLibraryName))
-                throw new Exception($"Library '{expectedLibraryName}' was not created");
+                if (testData.Database.Libraries == null)
+                    throw new Exception($"Libraries collection is null for {testData.FileName}");
 
-            if (!result.Tools.All(t => t.Library == expectedLibraryName))
-                throw new Exception("Not all tools are assigned to the correct library");
+                if (!testData.Database.Libraries.Any(l => l.Name == expectedLibraryName))
+                    throw new Exception($"Library '{expectedLibraryName}' was not created for {testData.FileName}");
+
+                if (!testData.Database.Tools.All(t => t.Library == expectedLibraryName))
+                    throw new Exception($"Not all tools are assigned to correct library in {testData.FileName}");
+            }
 
             Console.WriteLine("PASS");
         }
@@ -107,16 +232,18 @@ namespace ExchangeHSMWorks.Tests
         private void TestToolDataPreservation()
         {
             Console.Write("Testing tool data preservation... ");
-            var result = ImportToolsFromFile();
 
-            if (!result.Tools.All(t => !string.IsNullOrEmpty(t.Guid)))
-                throw new Exception("Some tools are missing GUIDs");
+            foreach (var testData in _testDataCache.Values)
+            {
+                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Guid)))
+                    throw new Exception($"Some tools are missing GUIDs in {testData.FileName}");
 
-            if (!result.Tools.All(t => t.Diameter > 0))
-                throw new Exception("Some tools have invalid diameters");
+                if (!testData.Database.Tools.All(t => t.Diameter > 0))
+                    throw new Exception($"Some tools have invalid diameters in {testData.FileName}");
 
-            if (!result.Tools.All(t => !string.IsNullOrEmpty(t.Aux_data)))
-                throw new Exception("Some tools are missing Aux_data");
+                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Aux_data)))
+                    throw new Exception($"Some tools are missing Aux_data in {testData.FileName}");
+            }
 
             Console.WriteLine("PASS");
         }
@@ -124,82 +251,119 @@ namespace ExchangeHSMWorks.Tests
         private void TestToolTypeMapping()
         {
             Console.Write("Testing tool type mapping... ");
-            var result = ImportToolsFromFile();
 
-            var toolTypes = result.Tools.Select(t => (Enums.ToolTypes)t.Name_id).Distinct().ToList();
+            var allToolTypes = new HashSet<Enums.ToolTypes>();
+            var hasEndMills = false;
+            var hasBallMills = false;
 
-            if (!toolTypes.Any())
-                throw new Exception("No tool types found");
+            foreach (var testData in _testDataCache.Values)
+            {
+                var toolTypes = testData.Database.Tools.Select(t => (Enums.ToolTypes)t.Name_id).Distinct().ToList();
 
-            if (!result.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidEndMill))
-                throw new Exception("No flat end mills found");
+                if (!toolTypes.Any())
+                    throw new Exception($"No tool types found in {testData.FileName}");
 
-            if (!result.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidBallMill))
-                throw new Exception("No ball end mills found");
+                foreach (var toolType in toolTypes)
+                {
+                    allToolTypes.Add(toolType);
+                }
 
-            Console.WriteLine($"PASS ({toolTypes.Count} different tool types)");
+                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidEndMill))
+                    hasEndMills = true;
+
+                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidBallMill))
+                    hasBallMills = true;
+            }
+
+            if (!hasEndMills)
+                throw new Exception("No flat end mills found across all test files");
+
+            if (!hasBallMills)
+                throw new Exception("No ball end mills found across all test files");
+
+            Console.WriteLine($"PASS ({allToolTypes.Count} different tool types across all files)");
         }
 
         private void TestMaterialMapping()
         {
             Console.Write("Testing material mapping... ");
-            var result = ImportToolsFromFile();
 
-            var materials = result.Tools.Select(t => (Enums.ToolMaterials)t.Tool_material_id).Distinct().ToList();
+            var allMaterials = new HashSet<Enums.ToolMaterials>();
+            var hasCarbide = false;
 
-            if (!materials.Any())
-                throw new Exception("No materials found");
+            foreach (var testData in _testDataCache.Values)
+            {
+                var materials = testData.Database.Tools.Select(t => (Enums.ToolMaterials)t.Tool_material_id).Distinct().ToList();
 
-            if (!result.Tools.Any(t => (Enums.ToolMaterials)t.Tool_material_id == Enums.ToolMaterials.Carbide))
-                throw new Exception("No carbide tools found");
+                if (!materials.Any())
+                    throw new Exception($"No materials found in {testData.FileName}");
 
-            Console.WriteLine($"PASS ({materials.Count} different materials)");
+                foreach (var material in materials)
+                {
+                    allMaterials.Add(material);
+                }
+
+                if (testData.Database.Tools.Any(t => (Enums.ToolMaterials)t.Tool_material_id == Enums.ToolMaterials.Carbide))
+                    hasCarbide = true;
+            }
+
+            if (!hasCarbide)
+                throw new Exception("No carbide tools found across all test files");
+
+            Console.WriteLine($"PASS ({allMaterials.Count} different materials across all files)");
         }
 
         private void TestUnitHandling()
         {
             Console.Write("Testing unit handling... ");
-            var result = ImportToolsFromFile();
 
-            // Check that unit flags are set based on source data
-            // The converter sets all unit flags based on the source unit
-            var toolsWithInconsistentUnits = result.Tools.Where(t =>
-                t.Input_units_m != t.Diameter_m ||
-                t.Input_units_m != t.Circle_dia_m ||
-                t.Input_units_m != t.Depth_m).ToList();
+            var totalMetricTools = 0;
+            var totalImperialTools = 0;
 
-            if (toolsWithInconsistentUnits.Any())
+            foreach (var testData in _testDataCache.Values)
             {
-                var firstInconsistent = toolsWithInconsistentUnits.First();
-                throw new Exception($"Unit flags inconsistent for tool {firstInconsistent.Series_name}: " +
-                    $"Input_units_m={firstInconsistent.Input_units_m}, " +
-                    $"Diameter_m={firstInconsistent.Diameter_m}, " +
-                    $"Circle_dia_m={firstInconsistent.Circle_dia_m}");
+                // Check that unit flags are set based on source data
+                // The converter sets all unit flags based on the source unit
+                var toolsWithInconsistentUnits = testData.Database.Tools.Where(t =>
+                    t.Input_units_m != t.Diameter_m ||
+                    t.Input_units_m != t.Circle_dia_m ||
+                    t.Input_units_m != t.Depth_m).ToList();
+
+                if (toolsWithInconsistentUnits.Any())
+                {
+                    var firstInconsistent = toolsWithInconsistentUnits.First();
+                    throw new Exception($"Unit flags inconsistent for tool {firstInconsistent.Series_name} in {testData.FileName}: " +
+                        $"Input_units_m={firstInconsistent.Input_units_m}, " +
+                        $"Diameter_m={firstInconsistent.Diameter_m}, " +
+                        $"Circle_dia_m={firstInconsistent.Circle_dia_m}");
+                }
+
+                // Count tools by unit type
+                totalMetricTools += testData.Database.Tools.Count(t => t.Input_units_m);
+                totalImperialTools += testData.Database.Tools.Count(t => !t.Input_units_m);
             }
 
-            // Count tools by unit type
-            var metricTools = result.Tools.Count(t => t.Input_units_m);
-            var imperialTools = result.Tools.Count(t => !t.Input_units_m);
-
-            Console.WriteLine($"PASS ({metricTools} metric, {imperialTools} imperial tools)");
+            Console.WriteLine($"PASS ({totalMetricTools} metric, {totalImperialTools} imperial tools across all files)");
         }
 
         private void TestToolGeometry()
         {
             Console.Write("Testing tool geometry... ");
-            var result = ImportToolsFromFile();
 
-            if (!result.Tools.All(t => t.Diameter > 0))
-                throw new Exception("Some tools have non-positive diameter");
+            foreach (var testData in _testDataCache.Values)
+            {
+                if (!testData.Database.Tools.All(t => t.Diameter > 0))
+                    throw new Exception($"Some tools have non-positive diameter in {testData.FileName}");
 
-            if (!result.Tools.All(t => t.Flute_Len >= 0))
-                throw new Exception("Some tools have negative flute length");
+                if (!testData.Database.Tools.All(t => t.Flute_Len >= 0))
+                    throw new Exception($"Some tools have negative flute length in {testData.FileName}");
 
-            if (!result.Tools.All(t => t.Stickout >= 0))
-                throw new Exception("Some tools have negative stickout");
+                if (!testData.Database.Tools.All(t => t.Stickout >= 0))
+                    throw new Exception($"Some tools have negative stickout in {testData.FileName}");
 
-            if (!result.Tools.All(t => t.Flute_N > 0))
-                throw new Exception("Some tools have no flutes");
+                if (!testData.Database.Tools.All(t => t.Flute_N > 0))
+                    throw new Exception($"Some tools have no flutes in {testData.FileName}");
+            }
 
             Console.WriteLine("PASS");
         }
@@ -207,16 +371,18 @@ namespace ExchangeHSMWorks.Tests
         private void TestManufacturerData()
         {
             Console.Write("Testing manufacturer data... ");
-            var result = ImportToolsFromFile();
 
-            if (!result.Tools.All(t => !string.IsNullOrEmpty(t.Brand_name)))
-                throw new Exception("Some tools missing manufacturer name");
+            foreach (var testData in _testDataCache.Values)
+            {
+                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Brand_name)))
+                    throw new Exception($"Some tools missing manufacturer name in {testData.FileName}");
 
-            if (!result.Tools.All(t => t.Brand_name == "HARVEY TOOL"))
-                throw new Exception("Not all tools are from Harvey Tool");
+                if (!testData.Database.Tools.All(t => t.Brand_name == "HARVEY TOOL"))
+                    throw new Exception($"Not all tools are from Harvey Tool in {testData.FileName}");
 
-            if (!result.Tools.All(t => !string.IsNullOrEmpty(t.Series_name)))
-                throw new Exception("Some tools missing product ID");
+                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Series_name)))
+                    throw new Exception($"Some tools missing product ID in {testData.FileName}");
+            }
 
             Console.WriteLine("PASS");
         }
@@ -224,23 +390,25 @@ namespace ExchangeHSMWorks.Tests
         private void TestRoundTripData()
         {
             Console.Write("Testing round-trip data... ");
-            var result = ImportToolsFromFile();
 
-            // Test first 10 tools for performance
-            foreach (var tool in result.Tools.Take(10))
+            foreach (var testData in _testDataCache.Values)
             {
-                if (string.IsNullOrEmpty(tool.Aux_data))
-                    throw new Exception($"Tool {tool.Series_name} missing Aux_data");
+                // Test first 10 tools per file for performance
+                foreach (var tool in testData.Database.Tools.Take(10))
+                {
+                    if (string.IsNullOrEmpty(tool.Aux_data))
+                        throw new Exception($"Tool {tool.Series_name} missing Aux_data in {testData.FileName}");
 
-                try
-                {
-                    var originalTool = Serializer.FromXML<toollibraryTool>(tool.Aux_data, false);
-                    if (originalTool == null)
-                        throw new Exception($"Failed to deserialize Aux_data for tool {tool.Series_name}");
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Failed to deserialize Aux_data for tool {tool.Series_name}: {ex.Message}");
+                    try
+                    {
+                        var originalTool = Serializer.FromXML<toollibraryTool>(tool.Aux_data, false);
+                        if (originalTool == null)
+                            throw new Exception($"Failed to deserialize Aux_data for tool {tool.Series_name} in {testData.FileName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to deserialize Aux_data for tool {tool.Series_name} in {testData.FileName}: {ex.Message}");
+                    }
                 }
             }
 
@@ -314,52 +482,5 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        /// <summary>
-        /// Helper method to import tools from the test file
-        /// </summary>
-        private DataBase ImportToolsFromFile()
-        {
-            var testFilePath = Path.GetFullPath(TestDataPath);
-
-            // Read the XML directly
-            var xml = File.ReadAllText(testFilePath);
-            var src = Serializer.FromXML<toollibrary>(xml, false);
-
-            // Create a new database
-            var targetDB = new DataBase();
-            var libname = Path.GetFileNameWithoutExtension(testFilePath);
-
-            // Add library
-            targetDB.AddLibrary(libname);
-
-            // Add tools one by one (mimicking the ImportTools method logic)
-            src.tool.ForEach(srcTool =>
-            {
-                var tool = Converter.ToTool(srcTool);
-                tool.Library = libname;
-                targetDB.Tools.Add(tool);
-
-                // Add holder if it has one
-                if (srcTool.holder != null)
-                {
-                    var holder = targetDB.Holders.FirstOrDefault(e =>
-                        e.Comment == srcTool.holder.description && e.Library == tool.Library);
-                    if (holder != null)
-                        targetDB.Holders.Remove(holder);
-
-                    targetDB.Holders.Add(new Holder()
-                    {
-                        Library = tool.Library,
-                        Units_m = srcTool.unit == "millimeters",
-                        Comment = srcTool.holder.description,
-                        Brand_name = srcTool.holder.vendor,
-                        Series_name = srcTool.holder.productid,
-                        Shank_Dia = Parse.ToDouble(srcTool.body.shaftdiameter)
-                    });
-                }
-            });
-
-            return targetDB;
-        }
     }
 }

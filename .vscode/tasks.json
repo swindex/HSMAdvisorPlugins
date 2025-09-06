@@ -131,7 +131,7 @@
             "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
             "type": "process",
             "args": [
-                "${workspaceFolder}\\ExchangeHSMWorks.Tests\\ExchangeHSMWorks.Tests.csproj",
+                "${workspaceFolder}\\HSMAdvisor-Plugins.sln",
                 "/p:Configuration=Debug",
                 "/p:Platform=Any CPU",
                 "/verbosity:minimal"
@@ -171,7 +171,7 @@
         },
         {
             "label": "run-unit-tests-vstest",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
@@ -191,13 +191,9 @@
         },
         {
             "label": "run-import-test-only",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "command": "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.exe",
             "type": "process",
-            "args": [
-                "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
-                "/Tests:ImportTools_WithValidHSMLibFile_ReturnsCorrectToolCount",
-                "/logger:console;verbosity=detailed"
-            ],
+            "args": [],
             "group": "test",
             "presentation": {
                 "echo": true,
@@ -211,7 +207,7 @@
         },
         {
             "label": "run-all-import-tests",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
