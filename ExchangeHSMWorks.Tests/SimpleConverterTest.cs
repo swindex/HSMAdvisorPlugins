@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 using HSMAdvisorDatabase.ToolDataBase;
 using HSMAdvisorDatabase;
 using ExchangeHSMWorks;
@@ -72,6 +73,9 @@ namespace ExchangeHSMWorks.Tests
             TestRoundTripData();
             TestMaterialConversion();
             TestCapabilities();
+
+            // Demonstrate the side-by-side comparison functionality
+            //DemonstrateComparisonFeature();
         }
 
         /// <summary>
@@ -235,14 +239,38 @@ namespace ExchangeHSMWorks.Tests
 
             foreach (var testData in _testDataCache.Values)
             {
-                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Guid)))
+                // Check for missing GUIDs
+                var toolsWithoutGuids = testData.Database.Tools.Where(t => string.IsNullOrEmpty(t.Guid)).ToList();
+                if (toolsWithoutGuids.Any())
+                {
+                    var firstTool = toolsWithoutGuids.First();
+                    var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
+                    ShowToolComparison("GUID Missing", originalTool, firstTool, testData.FileName);
                     throw new Exception($"Some tools are missing GUIDs in {testData.FileName}");
+                }
 
-                if (!testData.Database.Tools.All(t => t.Diameter > 0))
+                // Check for invalid diameters
+                var toolsWithInvalidDiameters = testData.Database.Tools.Where(t =>
+                {
+                    return t.Diameter <= 0;
+                }).ToList();
+                if (toolsWithInvalidDiameters.Any())
+                {
+                    var firstTool = toolsWithInvalidDiameters.First();
+                    var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
+                    ShowToolComparison("Invalid Diameter", originalTool, firstTool, testData.FileName);
                     throw new Exception($"Some tools have invalid diameters in {testData.FileName}");
+                }
 
-                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Aux_data)))
+                // Check for missing Aux_data
+                var toolsWithoutAuxData = testData.Database.Tools.Where(t => string.IsNullOrEmpty(t.Aux_data)).ToList();
+                if (toolsWithoutAuxData.Any())
+                {
+                    var firstTool = toolsWithoutAuxData.First();
+                    var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
+                    ShowToolComparison("Missing Aux_data", originalTool, firstTool, testData.FileName);
                     throw new Exception($"Some tools are missing Aux_data in {testData.FileName}");
+                }
             }
 
             Console.WriteLine("PASS");
@@ -480,6 +508,188 @@ namespace ExchangeHSMWorks.Tests
                 throw new Exception("Filter missing .xml extension");
 
             Console.WriteLine("PASS");
+        }
+
+        /// <summary>
+        /// Demonstrate the side-by-side comparison functionality with a sample tool
+        /// </summary>
+        private void DemonstrateComparisonFeature()
+        {
+            Console.WriteLine();
+            Console.WriteLine("=== SIDE-BY-SIDE COMPARISON DEMONSTRATION ===");
+            Console.WriteLine("This demonstrates how the comparison table appears when unit tests fail:");
+            Console.WriteLine();
+
+            // Get the first tool from the first test data file for demonstration
+            var firstTestData = _testDataCache.Values.First();
+            var firstConvertedTool = firstTestData.Database.Tools.First();
+            var firstOriginalTool = firstTestData.OriginalData.tool.FirstOrDefault(t => t.productid == firstConvertedTool.Series_name);
+
+            // Show the comparison table
+            ShowToolComparison("DEMONSTRATION", firstOriginalTool, firstConvertedTool, firstTestData.FileName);
+
+            Console.WriteLine("NOTE: In actual test failures, differences would be highlighted in yellow.");
+            Console.WriteLine("This comparison helps identify exactly what data was lost or incorrectly converted.");
+            Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Display a side-by-side comparison of source HSMWorks tool vs converted HSMAdvisor tool
+        /// </summary>
+        /// <param name="failureReason">The reason for the comparison (what failed)</param>
+        /// <param name="originalTool">Original HSMWorks tool data</param>
+        /// <param name="convertedTool">Converted HSMAdvisor tool data</param>
+        /// <param name="fileName">Source file name</param>
+        private void ShowToolComparison(string failureReason, toollibraryTool originalTool, Tool convertedTool, string fileName)
+        {
+            Console.WriteLine();
+            Console.WriteLine("================================================================================");
+            Console.WriteLine($"TOOL CONVERSION COMPARISON - {failureReason}");
+            Console.WriteLine($"File: {fileName}");
+            Console.WriteLine("================================================================================");
+            Console.WriteLine();
+
+            // Create table with fixed column widths
+            const int propertyWidth = 25;
+            const int sourceWidth = 30;
+            const int convertedWidth = 30;
+
+            var separator = new string('=', propertyWidth + sourceWidth + convertedWidth + 6);
+            var headerFormat = $"{{0,-{propertyWidth}}} | {{1,-{sourceWidth}}} | {{2,-{convertedWidth}}}";
+            var rowFormat = $"{{0,-{propertyWidth}}} | {{1,-{sourceWidth}}} | {{2,-{convertedWidth}}}";
+
+            Console.WriteLine(headerFormat, "Property", "HSMWorks Source", "HSMAdvisor Converted");
+            Console.WriteLine(separator);
+
+            // Basic identification
+            ShowComparisonRow("GUID", originalTool?.guid ?? "NULL", convertedTool?.Guid ?? "NULL", rowFormat);
+            ShowComparisonRow("Product ID", originalTool?.productid ?? "NULL", convertedTool?.Series_name ?? "NULL", rowFormat);
+            ShowComparisonRow("Description", originalTool?.description ?? "NULL", convertedTool?.Comment ?? "NULL", rowFormat);
+            ShowComparisonRow("Manufacturer", originalTool?.manufacturer ?? "NULL", convertedTool?.Brand_name ?? "NULL", rowFormat);
+            ShowComparisonRow("Type", originalTool?.type ?? "NULL", GetToolTypeName(convertedTool), rowFormat);
+
+            Console.WriteLine(separator);
+
+            // Material and units
+            ShowComparisonRow("Material", originalTool?.material?.name ?? "NULL", GetMaterialName(convertedTool), rowFormat);
+            ShowComparisonRow("Units", originalTool?.unit ?? "NULL", convertedTool?.Input_units_m == true ? "millimeters" : "inches", rowFormat);
+
+            Console.WriteLine(separator);
+
+            // Geometry data
+            if (originalTool?.body != null)
+            {
+                ShowComparisonRow("Diameter", originalTool.body.diameter ?? "NULL", convertedTool?.Diameter.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Flute Length", originalTool.body.flutelength ?? "NULL", convertedTool?.Flute_Len.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Body Length", originalTool.body.bodylength ?? "NULL", convertedTool?.Stickout.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Shaft Diameter", originalTool.body.shaftdiameter ?? "NULL", convertedTool?.Shank_Dia.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Number of Flutes", originalTool.body.numberofflutes ?? "NULL", convertedTool?.Flute_N.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Corner Radius", originalTool.body.cornerradius ?? "NULL", convertedTool?.Corner_rad.ToString() ?? "NULL", rowFormat);
+            }
+            else
+            {
+                ShowComparisonRow("Body Data", "NULL", "Converted values present", rowFormat);
+            }
+
+            Console.WriteLine(separator);
+
+            // NC data
+            if (originalTool?.nc != null)
+            {
+                ShowComparisonRow("NC Number", originalTool.nc.number ?? "NULL", convertedTool?.Number.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Diameter Offset", originalTool.nc.diameteroffset ?? "NULL", convertedTool?.Offset_Diameter.ToString() ?? "NULL", rowFormat);
+                ShowComparisonRow("Length Offset", originalTool.nc.lengthoffset ?? "NULL", convertedTool?.Offset_Length.ToString() ?? "NULL", rowFormat);
+            }
+
+            Console.WriteLine(separator);
+
+            // Aux data preservation
+            ShowComparisonRow("Aux Data Present", originalTool != null ? "YES" : "NO", !string.IsNullOrEmpty(convertedTool?.Aux_data) ? "YES" : "NO", rowFormat);
+
+            Console.WriteLine("================================================================================");
+            Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Show a single comparison row with highlighting for differences
+        /// </summary>
+        private void ShowComparisonRow(string property, string sourceValue, string convertedValue, string format)
+        {
+            // Normalize values for comparison
+            var normalizedSource = (sourceValue ?? "NULL").Trim();
+            var normalizedConverted = (convertedValue ?? "NULL").Trim();
+
+            // Truncate long values for display
+            var displaySource = normalizedSource.Length > 28 ? normalizedSource.Substring(0, 25) + "..." : normalizedSource;
+            var displayConverted = normalizedConverted.Length > 28 ? normalizedConverted.Substring(0, 25) + "..." : normalizedConverted;
+
+            // Check if values are different (with some tolerance for numeric values)
+            bool isDifferent = !AreValuesEquivalent(normalizedSource, normalizedConverted);
+
+            if (isDifferent)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(format, property, displaySource, displayConverted);
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.WriteLine(format, property, displaySource, displayConverted);
+            }
+        }
+
+        /// <summary>
+        /// Check if two values are equivalent, accounting for numeric precision and null handling
+        /// </summary>
+        private bool AreValuesEquivalent(string value1, string value2)
+        {
+            if (value1 == value2) return true;
+            if (value1 == "NULL" || value2 == "NULL") return false;
+
+            // Try numeric comparison with tolerance
+            if (double.TryParse(value1, out double num1) && double.TryParse(value2, out double num2))
+            {
+                return Math.Abs(num1 - num2) < 0.0001;
+            }
+
+            // String comparison (case insensitive)
+            return string.Equals(value1, value2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Get the tool type name from the converted tool
+        /// </summary>
+        private string GetToolTypeName(Tool tool)
+        {
+            if (tool == null) return "NULL";
+
+            try
+            {
+                var toolType = (Enums.ToolTypes)tool.Name_id;
+                return toolType.ToString();
+            }
+            catch
+            {
+                return $"Unknown ({tool.Name_id})";
+            }
+        }
+
+        /// <summary>
+        /// Get the material name from the converted tool
+        /// </summary>
+        private string GetMaterialName(Tool tool)
+        {
+            if (tool == null) return "NULL";
+
+            try
+            {
+                var material = (Enums.ToolMaterials)tool.Tool_material_id;
+                return material.ToString();
+            }
+            catch
+            {
+                return $"Unknown ({tool.Tool_material_id})";
+            }
         }
 
     }

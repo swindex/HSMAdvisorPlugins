@@ -20,9 +20,7 @@
         "**/packages": true
     },
     "dotnet.defaultSolution": "HSMAdvisor-Plugins.sln",
-    "omnisharp.defaultLaunchSolution": "HSMAdvisor-Plugins.sln",
     "omnisharp.enableEditorConfigSupport": true,
-    "omnisharp.enableRoslynAnalyzers": true,
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit"
@@ -31,7 +29,7 @@
     "csharp.semanticHighlighting.enabled": true,
     "xml.format.enabled": true,
     "xml.validation.enabled": true,
-    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
     "msbuild.projectFileExtensions": [
         ".csproj",
         ".vbproj",

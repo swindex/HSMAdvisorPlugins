@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "build-debug",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\HSMAdvisor-Plugins.sln",
@@ -27,7 +27,7 @@
         },
         {
             "label": "build-release",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\HSMAdvisor-Plugins.sln",
@@ -48,7 +48,7 @@
         },
         {
             "label": "clean",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\HSMAdvisor-Plugins.sln",
@@ -69,7 +69,7 @@
         },
         {
             "label": "rebuild",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\HSMAdvisor-Plugins.sln",
@@ -91,7 +91,7 @@
         },
         {
             "label": "build-plugin-only",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\ExchangeHSMWorks\\ExchangeHSMWorks.csproj",
@@ -128,7 +128,7 @@
         },
         {
             "label": "build-tests",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\HSMAdvisor-Plugins.sln",
@@ -171,7 +171,7 @@
         },
         {
             "label": "run-unit-tests-vstest",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
@@ -207,7 +207,7 @@
         },
         {
             "label": "run-all-import-tests",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "command": "MSBuild",
             "type": "process",
             "args": [
                 "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",

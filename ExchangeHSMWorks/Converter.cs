@@ -42,7 +42,7 @@ namespace ExchangeHSMWorks
                     return "hss";
             }
         }
-        public static Tool ToTool( toollibraryTool t )
+        public static Tool ToTool(toollibraryTool t)
         {
             Tool ret = new Tool(true)
             {
@@ -87,7 +87,7 @@ namespace ExchangeHSMWorks
                 Thread_pitch_m = t.unit == "millimeters",
                 Woc_m = t.unit == "millimeters"
 
-                
+
             };
 
             if (t.body != null)
@@ -110,7 +110,8 @@ namespace ExchangeHSMWorks
             ret.Productivity = -1;
 
             //override type
-            switch (t.type) {
+            switch (t.type)
+            {
                 case "flat end mill":
                 case "bull nose end mill":
                 case "tapered mill":
@@ -135,6 +136,16 @@ namespace ExchangeHSMWorks
                 case "chamfer mill":
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.ChamferMill);
                     ret.Diameter = Parse.ToDouble(t.body.tipdiameter);
+                    if (ret.Diameter <= 0)
+                        if (ret.Diameter_m)
+                        {
+                            ret.Diameter = 0.0010 * 25.4;
+                        }
+                        else
+                        {
+                            ret.Diameter = 0.001;
+                        }
+                    ret.Diameter = ret.Shank_Dia;
                     ret.Shank_Dia = Parse.ToDouble(t.body.diameter);
 
                     break;
@@ -163,7 +174,7 @@ namespace ExchangeHSMWorks
                     break;
                 case "boring bar":
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.BoringHead);
-                  
+
                     break;
                 case "turning threading":
                 case "turning general":
@@ -186,7 +197,7 @@ namespace ExchangeHSMWorks
                     break;
                 case "turning grooving":
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.TurningProfiling);
-                    
+
                     //ret.Thread_pitch = t.body.threadpitch;
                     ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
                     ret.Stickout = Parse.ToDouble(t.turningholder.headlength);
@@ -212,7 +223,7 @@ namespace ExchangeHSMWorks
         /// Read HSMWorks Tool Database file
         /// </summary>
         /// <returns></returns>
-        public override DataBase ImportTools() 
+        public override DataBase ImportTools()
         {
             var FileName = ShowOpenFileDialog();
 
@@ -248,7 +259,7 @@ namespace ExchangeHSMWorks
                     var holder = targetDB.Holders.FirstOrDefault(e => e.Comment == srcTool.holder.description && e.Library == tool.Library);
                     if (holder != null)
                         targetDB.Holders.Remove(holder);
-                    
+
                     targetDB.Holders.Add(new Holder()
                     {
                         Library = tool.Library,
@@ -296,12 +307,12 @@ namespace ExchangeHSMWorks
             //Create a new database
             toollibrary targetDB = new toollibrary();
 
-            
+
             //Add tools one by one
             src.Tools.ToList().ForEach(srcTool =>
             {
                 var tool = FromTool(srcTool);
-               
+
                 targetDB.tool.Add(tool);
 
                 //add holder if it has one
@@ -334,7 +345,9 @@ namespace ExchangeHSMWorks
                 try
                 {
                     ret = Serializer.FromXML<toollibraryTool>(srcTool.Aux_data, false);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     Debug.WriteLine(ex);
                 }
             }
@@ -375,12 +388,13 @@ namespace ExchangeHSMWorks
             ret.body.taperangle = Parse.ToString(90 - srcTool.Leadangle);
 
             //override type ONLY if none is specified by AUX_DATA
-            if (string.IsNullOrEmpty(ret.type)) {
+            if (string.IsNullOrEmpty(ret.type))
+            {
                 switch ((Enums.ToolTypes)srcTool.Name_id)
                 {
                     case Enums.ToolTypes.SolidEndMill:
                         ret.type = "flat end mill";
-                    
+
                         break;
                     case Enums.ToolTypes.ThreadMill:
                         ret.type = "thread mill";
@@ -468,13 +482,14 @@ namespace ExchangeHSMWorks
             OpenFileDialog1.FileName = "";
             OpenFileDialog1.Title = "Select an a HSMWorks tool database file";
             OpenFileDialog1.Filter = this.GetReadFileFilter();
-            
+
             OpenFileDialog1.AddExtension = true;
             OpenFileDialog1.SupportMultiDottedExtensions = true;
             OpenFileDialog1.CheckFileExists = true;
 
             var ret = OpenFileDialog1.ShowDialog();
-            if (ret == System.Windows.Forms.DialogResult.OK &&  File.Exists(OpenFileDialog1.FileName)) {
+            if (ret == System.Windows.Forms.DialogResult.OK && File.Exists(OpenFileDialog1.FileName))
+            {
                 return OpenFileDialog1.FileName;
             }
             return null;
@@ -493,7 +508,7 @@ namespace ExchangeHSMWorks
             //OpenFileDialog1.Exi = true;
 
             var ret = OpenFileDialog1.ShowDialog();
-            if (ret == System.Windows.Forms.DialogResult.OK )
+            if (ret == System.Windows.Forms.DialogResult.OK)
             {
                 return OpenFileDialog1.FileName;
             }
