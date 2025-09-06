@@ -14,7 +14,7 @@ namespace ExchangeHSMWorks.Tests
     /// </summary>
     public class SimpleConverterTest
     {
-        private const string TestDataDirectory = @".\test-data";
+        private const string TestDataDirectory = @"ExchangeHSMWorks.Tests\test-data";
 
         // Cache for loaded test data to avoid reloading files multiple times
         private static readonly Dictionary<string, TestDataInfo> _testDataCache = new Dictionary<string, TestDataInfo>();
