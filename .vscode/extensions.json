@@ -1,0 +1,15 @@
+{
+    "recommendations": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-xml",
+        "ms-vscode.powershell",
+        "formulahendry.dotnet-test-explorer",
+        "jchannon.csharpextensions",
+        "kreativ-software.csharpextensions"
+    ],
+    "unwantedRecommendations": [
+        "ms-vscode.vscode-typescript-next"
+    ]
+}

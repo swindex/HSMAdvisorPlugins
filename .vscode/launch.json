@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Plugin Test Runner",
+            "type": "clr",
+            "request": "launch",
+            "program": "${workspaceFolder}/Plugin-Test-Runner-UI/bin/Debug/Plugin-Test-Runner-UI.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "preLaunchTask": "build-debug"
+        },
+        {
+            "name": "Attach to HSMAdvisor Process",
+            "type": "clr",
+            "request": "attach",
+            "processName": "HSMAdvisor.exe"
+        },
+        {
+            "name": "Debug Plugin Test Runner (No Build)",
+            "type": "clr",
+            "request": "launch",
+            "program": "${workspaceFolder}/Plugin-Test-Runner-UI/bin/Debug/Plugin-Test-Runner-UI.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}

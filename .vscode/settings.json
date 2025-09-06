@@ -1,3 +1,41 @@
 {
-    "dotnet.preferCSharpExtension": true
+    "files.associations": {
+        "*.csproj": "xml",
+        "*.vbproj": "xml",
+        "*.sln": "plaintext",
+        "*.config": "xml",
+        "*.resx": "xml",
+        "*.xsd": "xml"
+    },
+    "files.exclude": {
+        "**/bin": false,
+        "**/obj": true,
+        "**/.vs": true,
+        "**/packages": true
+    },
+    "search.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/.vs": true,
+        "**/packages": true
+    },
+    "dotnet.defaultSolution": "HSMAdvisor-Plugins.sln",
+    "omnisharp.defaultLaunchSolution": "HSMAdvisor-Plugins.sln",
+    "omnisharp.enableEditorConfigSupport": true,
+    "omnisharp.enableImportCompletion": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "csharp.format.enable": true,
+    "csharp.semanticHighlighting.enabled": true,
+    "xml.format.enabled": true,
+    "xml.validation.enabled": true,
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "msbuild.projectFileExtensions": [
+        ".csproj",
+        ".vbproj",
+        ".sln"
+    ]
 }
