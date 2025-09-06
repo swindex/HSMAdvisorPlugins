@@ -29,7 +29,20 @@ namespace ExchangeHSMWorks.Tests
             public string FileName { get; set; }
             public DataBase Database { get; set; }
             public toollibrary OriginalData { get; set; }
-            public int ToolCount { get; set; }
+        }
+
+        /// <summary>
+        /// Database cache information for tool count validation
+        /// </summary>
+        private class DatabaseCacheInfo
+        {
+            public string FileName { get; set; }
+            public int OriginalToolCount { get; set; }
+            public int ImportedToolCount { get; set; }
+            public DataBase Database { get; set; }
+
+            public toollibrary OriginalLibrary { get; set; }
+            public bool ToolCountMatches => OriginalToolCount == ImportedToolCount;
         }
 
         public static void Main(string[] args)
@@ -63,6 +76,7 @@ namespace ExchangeHSMWorks.Tests
 
             TestFilesExist();
             TestImportToolCount();
+            TestToolCountConsistency();
             TestLibraryCreation();
             TestToolDataPreservation();
             TestToolTypeMapping();
@@ -106,7 +120,7 @@ namespace ExchangeHSMWorks.Tests
                 {
                     var testData = LoadTestDataFile(filePath);
                     _testDataCache[fileName] = testData;
-                    Console.WriteLine($"OK ({testData.ToolCount} tools)");
+                    Console.WriteLine($"OK ({testData.OriginalData.tool} tools)");
                 }
                 catch (Exception ex)
                 {
@@ -131,6 +145,7 @@ namespace ExchangeHSMWorks.Tests
             // Create database and convert tools
             var database = new DataBase();
             var libraryName = Path.GetFileNameWithoutExtension(filePath);
+            var fileName = Path.GetFileName(filePath);
 
             // Add library
             database.AddLibrary(libraryName);
@@ -162,13 +177,16 @@ namespace ExchangeHSMWorks.Tests
                 }
             });
 
+            // Populate database cache for tool count validation
+            var originalToolCount = originalData.tool?.Count ?? 0;
+            var importedToolCount = database.Tools.Count;
+
             return new TestDataInfo
             {
                 FilePath = filePath,
-                FileName = Path.GetFileName(filePath),
+                FileName = fileName,
                 Database = database,
                 OriginalData = originalData,
-                ToolCount = database.Tools.Count
             };
         }
 
@@ -212,6 +230,39 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({totalTools} total tools across {_testDataCache.Count} files)");
         }
 
+        private void TestToolCountConsistency()
+        {
+            Console.Write("Testing tool count consistency... ");
+
+            var inconsistentFiles = new List<string>();
+            var totalOriginal = 0;
+            var totalImported = 0;
+
+            foreach (var cacheInfo in _testDataCache.Values)
+            {
+                totalOriginal += cacheInfo.OriginalData.tool.Count;
+                totalImported += cacheInfo.Database.Tools.Count;
+
+                if (cacheInfo.OriginalData.tool.Count != cacheInfo.Database.Tools.Count)
+                {
+                    inconsistentFiles.Add($"{cacheInfo.FileName}: {cacheInfo.OriginalData.tool.Count} original → {cacheInfo.Database.Tools.Count} imported");
+                }
+            }
+
+            if (inconsistentFiles.Any())
+            {
+                Console.WriteLine();
+                Console.WriteLine("TOOL COUNT MISMATCH DETECTED:");
+                foreach (var inconsistency in inconsistentFiles)
+                {
+                    Console.WriteLine($"  {inconsistency}");
+                }
+                throw new Exception($"Tool count mismatch in {inconsistentFiles.Count} file(s). Each original tool library should result in the same number of imported tools in the database.");
+            }
+
+            Console.WriteLine($"PASS (Original: {totalOriginal}, Imported: {totalImported} across {_testDataCache.Count} files)");
+        }
+
         private void TestLibraryCreation()
         {
             Console.Write("Testing library creation... ");
@@ -247,6 +298,15 @@ namespace ExchangeHSMWorks.Tests
                     var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
                     ShowToolComparison("GUID Missing", originalTool, firstTool, testData.FileName);
                     throw new Exception($"Some tools are missing GUIDs in {testData.FileName}");
+                }
+
+                var toolsWithEmptyNameID = testData.Database.Tools.Where(t => t.Name_id == 0).ToList();
+                if (toolsWithEmptyNameID.Any())
+                {
+                    var firstTool = toolsWithEmptyNameID.First();
+                    var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
+                    ShowToolComparison("Name_id Missing", originalTool, firstTool, testData.FileName);
+                    throw new Exception($"Some tools have invalid Name_id in {testData.FileName}");
                 }
 
                 // Check for invalid diameters

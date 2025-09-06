@@ -47,6 +47,8 @@ namespace ExchangeHSMWorks
             Tool ret = new Tool(true)
             {
                 Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
+                Type = Enums.ToolTypeNames.endmill,
+
                 Coating_id = Convert.ToInt32(Enums.ToolCoatings.None),
                 Tool_material_id = Convert.ToInt32(ToToolMaterial(t.material.name)),
 
@@ -118,7 +120,7 @@ namespace ExchangeHSMWorks
                 case "radius mill":
                     //Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
                     break;
-                case "thread mill":
+                case "form mill":
                     ret.Type = Enums.ToolTypeNames.threadmill;
                     ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.ThreadMill);
@@ -162,6 +164,10 @@ namespace ExchangeHSMWorks
                     ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Tip);
                     ret.Flute_N = 2;
                     break;
+                case "counter bore":
+                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.Counterbore);
+                    ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Tip);
+                    break;
                 case "tap right hand":
                     ret.Name_id = Convert.ToInt32(Enums.ToolTypes.Tap);
                     ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
@@ -204,6 +210,13 @@ namespace ExchangeHSMWorks
                     ret.Corner_rad = Parse.ToDouble(t.insert.cornerradius);
 
                     ret.Flute_N = 1;
+                    break;
+                // These types are not supported in HSMAdvisor yet. Set to endmill by default
+                case "dovetail mill":
+                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill);
+                    break;
+                default:
+                    ret.Name_id = 0;
                     break;
 
             }
@@ -397,7 +410,7 @@ namespace ExchangeHSMWorks
 
                         break;
                     case Enums.ToolTypes.ThreadMill:
-                        ret.type = "thread mill";
+                        ret.type = "form mill";
                         ret.body.threadpitch = Parse.ToString(srcTool.Thread_pitch);
                         ret.body.numberoffteeth = Parse.ToString((int)(srcTool.Flute_Len / srcTool.Thread_pitch));
                         break;
