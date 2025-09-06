@@ -125,6 +125,109 @@
                 "clear": false
             },
             "dependsOn": "build-debug"
+        },
+        {
+            "label": "build-tests",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "type": "process",
+            "args": [
+                "${workspaceFolder}\\ExchangeHSMWorks.Tests\\ExchangeHSMWorks.Tests.csproj",
+                "/p:Configuration=Debug",
+                "/p:Platform=Any CPU",
+                "/verbosity:minimal"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run-unit-tests",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\MSTest.exe",
+            "type": "process",
+            "args": [
+                "/testcontainer:${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
+                "/resultsfile:${workspaceFolder}\\TestResults.trx"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "dependsOn": "build-tests"
+        },
+        {
+            "label": "run-unit-tests-vstest",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "type": "process",
+            "args": [
+                "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
+                "/logger:trx;LogFileName=TestResults.trx",
+                "/ResultsDirectory:${workspaceFolder}"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "dependsOn": "build-tests"
+        },
+        {
+            "label": "run-import-test-only",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "type": "process",
+            "args": [
+                "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
+                "/Tests:ImportTools_WithValidHSMLibFile_ReturnsCorrectToolCount",
+                "/logger:console;verbosity=detailed"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "dependsOn": "build-tests"
+        },
+        {
+            "label": "run-all-import-tests",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
+            "type": "process",
+            "args": [
+                "${workspaceFolder}\\ExchangeHSMWorks.Tests\\bin\\Debug\\ExchangeHSMWorks.Tests.dll",
+                "/TestCaseFilter:TestMethod~ImportTools",
+                "/logger:console;verbosity=detailed"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "dependsOn": "build-tests"
         }
     ]
 }
