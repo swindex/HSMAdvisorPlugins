@@ -13,11 +13,12 @@ HSMAdvisorPlugins is a C# solution that provides extensible plugin architecture 
 
 ### Key Components
 1. **ExchangeHSMWorks Plugin**: Core plugin for HSMWorks tool database conversion
-2. **Plugin Test Runner UI**: Development tool for testing plugins during development
-3. **HSMAdvisor Core Integration**: Seamless integration with HSMAdvisor's plugin system
+2. **ImportCsvTools Plugin**: Flexible CSV import with JSON-based mapping system
+3. **Plugin Test Runner UI**: Development tool for testing plugins during development
+4. **HSMAdvisor Core Integration**: Seamless integration with HSMAdvisor's plugin system
 
 ### Technical Requirements
-- **.NET Framework 4.5**: Target framework for compatibility
+- **.NET Framework 4.8**: Target framework for compatibility
 - **Plugin Interface Compliance**: All plugins must implement `ToolsPluginInterface`
 - **XML Schema Support**: Handle HSMWorks XML tool library format
 - **Bidirectional Conversion**: Support both import and export operations
@@ -37,8 +38,16 @@ HSMAdvisorPlugins is a C# solution that provides extensible plugin architecture 
 - Backward compatibility with existing HSMAdvisor installations
 
 ## Project Scope
-- **In Scope**: HSMWorks tool database conversion, plugin framework, testing tools
-- **Out of Scope**: HSMAdvisor core application modifications, other CAM system integrations (beyond HSMWorks)
+- **In Scope**: 
+  - HSMWorks tool database conversion (bidirectional)
+  - CSV import with flexible mapping system
+  - Plugin framework and testing tools
+  - Visual mapping editor for CSV configurations
+  - Unit testing infrastructure for all plugins
+- **Out of Scope**: 
+  - HSMAdvisor core application modifications
+  - Other CAM system integrations (beyond HSMWorks and CSV)
+  - CSV export functionality (import only)
 
 ## Stakeholders
 - **Primary Users**: HSMAdvisor users with HSMWorks tool libraries

@@ -3,12 +3,15 @@
 ## Technology Stack
 
 ### Core Technologies
-- **.NET Framework 4.5**: Target framework for compatibility with HSMAdvisor
+- **.NET Framework 4.8**: Target framework for compatibility with HSMAdvisor
 - **C# 6.0+**: Primary development language
 - **Visual Basic .NET**: Used for Plugin Test Runner UI
-- **Windows Forms**: UI framework for test runner application
+- **Windows Forms**: UI framework for test runner and mapping editors
 - **XML Serialization**: For HSMWorks format handling
-- **System.Reflection**: For dynamic plugin loading
+- **JSON Serialization**: For CSV mapping configurations
+- **System.Reflection**: For dynamic plugin loading and Tool field mapping
+- **C# Expression Evaluation**: Runtime expression compilation for CSV mappings
+- **CSV Parsing**: Text parsing for CSV file import
 
 ### Development Environment
 - **Visual Studio 2019**: Required IDE
@@ -20,7 +23,6 @@
 
 #### HSMAdvisor Core Libraries
 Located in `HSMadvisorDlls/`:
-- **HSMAdvisorCore.dll**: Core application functionality
 - **HSMAdvisorDatabase.dll**: Database and tool management
 - **HSMAdvisorPlugin.dll**: Plugin interface definitions
 - **Newtonsoft.Json.dll**: JSON serialization support
@@ -36,27 +38,67 @@ Located in `HSMadvisorDlls/`:
 ### Solution Organization
 ```
 HSMAdvisor-Plugins.sln
-├── ExchangeHSMWorks/                 # Main plugin project
+├── ExchangeHSMWorks/                 # HSMWorks plugin project
 │   ├── Converter.cs                  # Core conversion logic
 │   ├── Schema.cs                     # HSMWorks XML schema classes
 │   ├── XMLSchema.xsd                 # HSMWorks schema definition
 │   └── ExchangeHSMWorks.csproj       # C# class library project
+├── ExchangeHSMWorks.Tests/           # HSMWorks unit tests
+│   ├── SimpleConverterTest.cs        # Unit test suite
+│   ├── test-data/                    # Sample .hsmlib files
+│   └── ExchangeHSMWorks.Tests.csproj
+├── ImportCsvTools/                   # CSV import plugin project
+│   ├── CsvToolImporter.cs            # Main import engine
+│   ├── CsvMapping.cs                 # Mapping configuration classes
+│   ├── ExpressionEvaluator.cs        # Expression evaluation engine
+│   ├── ReflectionHelpers.cs          # Tool field reflection utilities
+│   ├── CsvImportColumnInfo.cs        # CSV column metadata
+│   ├── Forms/                        # Visual mapping editor forms
+│   │   ├── MappingEditorForm.cs      # Main mapping editor
+│   │   ├── ExpressionEditorForm.cs   # Expression editor
+│   │   ├── ValueMapEditorForm.cs     # Value translation editor
+│   │   └── MappingSelectionForm.cs   # Mapping file selector
+│   ├── SampleMapping.json            # Example mapping config
+│   └── ImportCsvTools.csproj         # C# class library project
+├── ImportCsvTools.Tests/             # CSV import unit tests
+│   ├── CsvImportTest.cs              # Unit test suite
+│   ├── test-data/                    # Sample CSV and mapping files
+│   └── ImportCsvTools.Tests.csproj
 ├── Plugin-Test-Runner-UI/            # Testing application
 │   ├── Form1.vb                      # Main test UI
 │   ├── Form1.Designer.vb             # UI designer code
 │   └── Plugin-Test-Runner-UI.vbproj  # VB.NET Windows Forms project
 └── HSMadvisorDlls/                   # Reference assemblies
-    ├── HSMAdvisorCore.dll
     ├── HSMAdvisorDatabase.dll
     ├── HSMAdvisorPlugin.dll
     └── Newtonsoft.Json.dll
 ```
 
 ### Build Configuration
-- **Target Framework**: .NET Framework 4.5
+- **Target Framework**: .NET Framework 4.8
 - **Platform**: Any CPU
 - **Configuration**: Release (for deployment)
 - **Output**: Class library DLL files
+- **Test Framework**: NUnit for unit testing
+
+### Project Dependencies
+**ExchangeHSMWorks:**
+- HSMAdvisorDatabase.dll
+- HSMAdvisorPlugin.dll
+- System.Xml.Serialization
+
+**ImportCsvTools:**
+- HSMAdvisorDatabase.dll
+- HSMAdvisorPlugin.dll
+- Newtonsoft.Json.dll
+- System.Windows.Forms (for editors)
+- Microsoft.CSharp (for expression evaluation)
+
+**Plugin-Test-Runner-UI:**
+- HSMAdvisorDatabase.dll
+- HSMAdvisorPlugin.dll
+- System.Windows.Forms
+- System.Reflection
 
 ## Technical Constraints
 
@@ -84,6 +126,7 @@ HSMAdvisor-Plugins.sln
 
 #### Namespace Structure
 ```csharp
+// ExchangeHSMWorks
 namespace ExchangeHSMWorks
 {
     public class Converter : ToolsPluginInterface  // Main plugin class
@@ -91,6 +134,26 @@ namespace ExchangeHSMWorks
     public partial class toollibrary
     public partial class toollibraryTool
     // ... other schema classes
+}
+
+// ImportCsvTools
+namespace ImportCsvTools
+{
+    public class CsvToolImporter : ToolsPluginInterface  // Main plugin class
+    public class CsvMapping                              // Configuration model
+    public class CsvMappingConfig                        // Root config
+    public class CsvImportColumnInfo                     // Column metadata
+    public class ExpressionEvaluator                     // Expression engine
+    public static class ReflectionHelpers                // Reflection utilities
+    
+    // Forms namespace
+    namespace ImportCsvTools.Forms
+    {
+        public class MappingEditorForm : Form
+        public class ExpressionEditorForm : Form
+        public class ValueMapEditorForm : Form
+        public class MappingSelectionForm : Form
+    }
 }
 ```
 
@@ -162,6 +225,102 @@ public string cornerradius { get; set; }
 
 [System.Xml.Serialization.XmlElement("product-id")]
 public string productid { get; set; }
+```
+
+### JSON Configuration Patterns
+
+#### Mapping Configuration Structure
+```csharp
+public class CsvMappingConfig
+{
+    public string LibraryName { get; set; }
+    public bool AllowInvalidToolImport { get; set; }
+    public string CsvInputUnits { get; set; }  // "in" or "mm"
+    public List<CsvMapping> Mappings { get; set; }
+}
+
+public class CsvMapping
+{
+    public string CsvColumn { get; set; }
+    public string ToolField { get; set; }
+    public Dictionary<string, string> ValueMap { get; set; }
+    public string DefaultValue { get; set; }
+    public string EnumType { get; set; }
+    public string Expression { get; set; }
+}
+```
+
+#### JSON Serialization
+```csharp
+// Load mapping configuration
+var json = File.ReadAllText(mappingFilePath);
+var config = JsonConvert.DeserializeObject<CsvMappingConfig>(json);
+
+// Save mapping configuration
+var json = JsonConvert.SerializeObject(config, Formatting.Indented);
+File.WriteAllText(mappingFilePath, json);
+```
+
+### CSV Processing Patterns
+
+#### CSV Parsing
+```csharp
+var lines = File.ReadAllLines(csvFilePath);
+var headers = lines[0].Split(',');
+var dataRows = lines.Skip(1);
+
+foreach (var row in dataRows)
+{
+    var values = row.Split(',');
+    var tool = CreateToolFromRow(headers, values, mapping);
+    database.Tools.Add(tool);
+}
+```
+
+#### Reflection-Based Field Setting
+```csharp
+public static void SetToolField(Tool tool, string fieldName, object value)
+{
+    var fieldInfo = typeof(Tool).GetField(fieldName);
+    if (fieldInfo != null)
+    {
+        var convertedValue = Convert.ChangeType(value, fieldInfo.FieldType);
+        fieldInfo.SetValue(tool, convertedValue);
+    }
+}
+```
+
+### Expression Evaluation Patterns
+
+#### Runtime Expression Compilation
+```csharp
+public class ExpressionEvaluator
+{
+    public object Evaluate(string expression, Dictionary<string, object> context)
+    {
+        // Build C# code with expression
+        var code = $"return {expression};";
+        
+        // Compile and execute at runtime
+        // Uses Microsoft.CSharp.CSharpCodeProvider
+        // or Roslyn scripting APIs
+    }
+}
+```
+
+#### Expression Usage Examples
+```csharp
+// Unit conversion
+"value * 0.03937"  // mm to inches
+
+// Conditional logic
+"string.IsNullOrEmpty(value) ? 4 : int.Parse(value)"
+
+// Boolean conversion
+"value == \"1\" || value.ToLower() == \"yes\""
+
+// Complex mapping
+"value.Contains(\"Ball\") ? \"SolidBallMill\" : \"SolidEndMill\""
 ```
 
 ## Testing Infrastructure
