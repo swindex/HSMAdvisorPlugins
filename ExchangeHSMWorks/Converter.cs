@@ -46,11 +46,10 @@ namespace ExchangeHSMWorks
         {
             Tool ret = new Tool(true)
             {
-                Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
-                Type = Enums.ToolTypeNames.endmill,
-
-                Coating_id = Convert.ToInt32(Enums.ToolCoatings.None),
-                Tool_material_id = Convert.ToInt32(ToToolMaterial(t.material.name)),
+                Tool_type_id = Enums.ToolTypes.SolidEndMill,
+                
+                Coating_id = Enums.ToolCoatings.None,
+                Tool_material_id = ToToolMaterial(t.material.name),
 
                 Guid = t.guid,
                 Comment = t.description,
@@ -102,8 +101,8 @@ namespace ExchangeHSMWorks
                 ret.Shank_Dia = Parse.ToDouble(t.body.shaftdiameter);
                 ret.Flute_N = Parse.ToInteger(t.body.numberofflutes);
                 ret.Helix_angle = -1;
+                ret.Toolangle_mode = Enums.ToolAngleModes.Lead;
                 ret.Leadangle = 90 - Parse.ToDouble(t.body.taperangle);
-                ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Lead);
             }
 
             //set default values
@@ -118,25 +117,25 @@ namespace ExchangeHSMWorks
                 case "bull nose end mill":
                 case "tapered mill":
                 case "radius mill":
-                    //Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
-                    break;
                 case "form mill":
-                    ret.Type = Enums.ToolTypeNames.threadmill;
+                    //Tool_type_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
+                    break;
+                case "thread mill":
                     ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.ThreadMill);
+                    ret.Tool_type_id = Enums.ToolTypes.ThreadMill;
                     break;
                 case "ball end mill":
                 case "lollipop mill":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.SolidBallMill);
+                    ret.Tool_type_id = Enums.ToolTypes.SolidBallMill;
                     break;
                 case "face mill":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.IndexedFaceMill);
+                    ret.Tool_type_id = Enums.ToolTypes.IndexedFaceMill;
                     break;
                 case "slot mill":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.WoodRuff);
+                    ret.Tool_type_id = Enums.ToolTypes.WoodRuff;
                     break;
                 case "chamfer mill":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.ChamferMill);
+                    ret.Tool_type_id = Enums.ToolTypes.ChamferMill;
                     ret.Diameter = Parse.ToDouble(t.body.tipdiameter);
                     if (ret.Diameter <= 0)
                         if (ret.Diameter_m)
@@ -149,42 +148,42 @@ namespace ExchangeHSMWorks
                         }
                     ret.Diameter = ret.Shank_Dia;
                     ret.Shank_Dia = Parse.ToDouble(t.body.diameter);
+                    ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
 
                     break;
 
                 case "center drill":
                 case "drill":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.JobberTwistDrill);
-                    ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Tip);
+                    ret.Tool_type_id = Enums.ToolTypes.JobberTwistDrill;
+                    ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
                     ret.Flute_N = 2;
                     break;
                 case "spot drill":
-                    ret.Type = Enums.ToolTypeNames.drill;
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.SpotDrill);
-                    ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Tip);
+                    ret.Tool_type_id = Enums.ToolTypes.SpotDrill;
+                    ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
                     ret.Flute_N = 2;
                     break;
                 case "counter bore":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.Counterbore);
-                    ret.Leadangle_mode = Convert.ToInt32(Enums.ToolAngleModes.Tip);
+                    ret.Tool_type_id = Enums.ToolTypes.Counterbore;
+                    ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
                     break;
                 case "tap right hand":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.Tap);
+                    ret.Tool_type_id = Enums.ToolTypes.Tap;
                     ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
                     ret.Flute_N = 1;
                     break;
                 case "tap left hand":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.Tap);
+                    ret.Tool_type_id = Enums.ToolTypes.Tap;
                     ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
                     ret.Flute_N = 1;
                     break;
                 case "boring bar":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.BoringHead);
+                    ret.Tool_type_id = Enums.ToolTypes.BoringHead;
 
                     break;
                 case "turning threading":
                 case "turning general":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.TurningProfiling);
+                    ret.Tool_type_id = Enums.ToolTypes.TurningProfiling;
                     //ret.Thread_pitch = t.body.threadpitch;
                     ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
                     ret.Stickout = Parse.ToDouble(t.turningholder.headlength);
@@ -193,7 +192,7 @@ namespace ExchangeHSMWorks
                     ret.Flute_N = 1;
                     break;
                 case "turning boring":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.BoringBar);
+                    ret.Tool_type_id = Enums.ToolTypes.BoringBar;
                     //ret.Thread_pitch = t.body.threadpitch;
                     ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
                     ret.Stickout = Parse.ToDouble(t.turningholder.headlength);
@@ -202,7 +201,7 @@ namespace ExchangeHSMWorks
                     ret.Flute_N = 1;
                     break;
                 case "turning grooving":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.TurningProfiling);
+                    ret.Tool_type_id = Enums.ToolTypes.TurningProfiling;
 
                     //ret.Thread_pitch = t.body.threadpitch;
                     ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
@@ -213,10 +212,14 @@ namespace ExchangeHSMWorks
                     break;
                 // These types are not supported in HSMAdvisor yet. Set to endmill by default
                 case "dovetail mill":
-                    ret.Name_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill);
+                    ret.Tool_type_id = Enums.ToolTypes.SolidEndMill;
+                    ret.Toolangle_mode = Enums.ToolAngleModes.Taper;
+                    // Fusions's dovetail mills specify taperangle as always positive, but in HSMAdvisor it's negative for dovetails
+                    ret.Toolangle = (-Parse.ToDouble(t.body.taperangle));
+
                     break;
                 default:
-                    ret.Name_id = 0;
+                    ret.Tool_type_id = 0;
                     break;
 
             }
@@ -403,7 +406,7 @@ namespace ExchangeHSMWorks
             //override type ONLY if none is specified by AUX_DATA
             if (string.IsNullOrEmpty(ret.type))
             {
-                switch ((Enums.ToolTypes)srcTool.Name_id)
+                switch ((Enums.ToolTypes)srcTool.Tool_type_id)
                 {
                     case Enums.ToolTypes.SolidEndMill:
                         ret.type = "flat end mill";

@@ -300,13 +300,13 @@ namespace ExchangeHSMWorks.Tests
                     throw new Exception($"Some tools are missing GUIDs in {testData.FileName}");
                 }
 
-                var toolsWithEmptyNameID = testData.Database.Tools.Where(t => t.Name_id == 0).ToList();
+                var toolsWithEmptyNameID = testData.Database.Tools.Where(t => t.Tool_type_id == 0).ToList();
                 if (toolsWithEmptyNameID.Any())
                 {
                     var firstTool = toolsWithEmptyNameID.First();
                     var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
-                    ShowToolComparison("Name_id Missing", originalTool, firstTool, testData.FileName);
-                    throw new Exception($"Some tools have invalid Name_id in {testData.FileName}");
+                    ShowToolComparison("Tool_type_id Missing", originalTool, firstTool, testData.FileName);
+                    throw new Exception($"Some tools have invalid Tool_type_id in {testData.FileName}");
                 }
 
                 // Check for invalid diameters
@@ -346,7 +346,7 @@ namespace ExchangeHSMWorks.Tests
 
             foreach (var testData in _testDataCache.Values)
             {
-                var toolTypes = testData.Database.Tools.Select(t => (Enums.ToolTypes)t.Name_id).Distinct().ToList();
+                var toolTypes = testData.Database.Tools.Select(t => (Enums.ToolTypes)t.Tool_type_id).Distinct().ToList();
 
                 if (!toolTypes.Any())
                     throw new Exception($"No tool types found in {testData.FileName}");
@@ -356,10 +356,10 @@ namespace ExchangeHSMWorks.Tests
                     allToolTypes.Add(toolType);
                 }
 
-                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidEndMill))
+                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Tool_type_id == Enums.ToolTypes.SolidEndMill))
                     hasEndMills = true;
 
-                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidBallMill))
+                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Tool_type_id == Enums.ToolTypes.SolidBallMill))
                     hasBallMills = true;
             }
 
@@ -725,12 +725,12 @@ namespace ExchangeHSMWorks.Tests
 
             try
             {
-                var toolType = (Enums.ToolTypes)tool.Name_id;
+                var toolType = (Enums.ToolTypes)tool.Tool_type_id;
                 return toolType.ToString();
             }
             catch
             {
-                return $"Unknown ({tool.Name_id})";
+                return $"Unknown ({tool.Tool_type_id})";
             }
         }
 

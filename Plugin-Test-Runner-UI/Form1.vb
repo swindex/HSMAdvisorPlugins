@@ -28,7 +28,8 @@ Public Class Form1
         Set(ByVal value As String)
             _pluginPath = value
             txt_pluginPath.Text = value
-            Me.Plugins = HSMAdvisorPlugin.PluginsReader.ReadPlugins(txt_pluginPath.Text)
+            Dim domain = AppDomain.CurrentDomain
+            Me.Plugins = HSMAdvisorPlugin.PluginsReader.ReadPlugins(txt_pluginPath.Text, domain)
         End Set
     End Property
 

@@ -1,0 +1,27 @@
+{
+  "LibraryName": "CSV Import",
+  "Mappings": [
+    {
+      "CsvColumn": "Tool Name",
+      "ToolField": "Comment"
+    },
+    {
+      "CsvColumn": "Tool Number",
+      "ToolField": "Number"
+    },
+    {
+      "CsvColumn": "Diameter",
+      "ToolField": "Diameter"
+    },
+    {
+      "CsvColumn": "Tool Material",
+      "ToolField": "Tool_material_id",
+      "EnumType": "ToolMaterials",
+      "ValueMap": {
+        "carb": "Carbide",
+        "hss": "HSS",
+        "cobalt": "HSCobalt"
+      }
+    }
+  ]
+}

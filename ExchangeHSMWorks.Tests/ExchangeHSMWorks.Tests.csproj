@@ -57,7 +57,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="..\HSMadvisorDlls\HSMAdvisorCore.dll" />
     <Reference Include="..\HSMadvisorDlls\HSMAdvisorDatabase.dll" />
     <Reference Include="..\HSMadvisorDlls\HSMAdvisorPlugin.dll" />
     <Reference Include="..\HSMadvisorDlls\Newtonsoft.Json.dll" />
