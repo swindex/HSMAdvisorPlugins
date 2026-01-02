@@ -6,6 +6,7 @@ using System.Text;
 using HSMAdvisorDatabase.ToolDataBase;
 using HSMAdvisorDatabase;
 using ExchangeHSMWorks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ExchangeHSMWorks.Tests
 {
@@ -13,6 +14,7 @@ namespace ExchangeHSMWorks.Tests
     /// Simple test class that can be run without MSTest framework
     /// Demonstrates the plugin import functionality with all test data files
     /// </summary>
+    [TestClass]
     public class SimpleConverterTest
     {
         private const string TestDataDirectory = @"ExchangeHSMWorks.Tests\test-data";
@@ -69,6 +71,7 @@ namespace ExchangeHSMWorks.Tests
             Console.ReadKey();
         }
 
+        [TestMethod]
         public void RunAllTests()
         {
             // Load all test data files first
@@ -190,7 +193,8 @@ namespace ExchangeHSMWorks.Tests
             };
         }
 
-        private void TestFilesExist()
+        [TestMethod]
+        public void TestFilesExist()
         {
             Console.Write("Testing files exist... ");
 
@@ -208,7 +212,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({_testDataCache.Count} files)");
         }
 
-        private void TestImportToolCount()
+        [TestMethod]
+        public void TestImportToolCount()
         {
             Console.Write("Testing import tool count... ");
 
@@ -230,7 +235,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({totalTools} total tools across {_testDataCache.Count} files)");
         }
 
-        private void TestToolCountConsistency()
+        [TestMethod]
+        public void TestToolCountConsistency()
         {
             Console.Write("Testing tool count consistency... ");
 
@@ -263,7 +269,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS (Original: {totalOriginal}, Imported: {totalImported} across {_testDataCache.Count} files)");
         }
 
-        private void TestLibraryCreation()
+        [TestMethod]
+        public void TestLibraryCreation()
         {
             Console.Write("Testing library creation... ");
 
@@ -284,7 +291,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestToolDataPreservation()
+        [TestMethod]
+        public void TestToolDataPreservation()
         {
             Console.Write("Testing tool data preservation... ");
 
@@ -336,7 +344,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestToolTypeMapping()
+        [TestMethod]
+        public void TestToolTypeMapping()
         {
             Console.Write("Testing tool type mapping... ");
 
@@ -372,7 +381,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({allToolTypes.Count} different tool types across all files)");
         }
 
-        private void TestMaterialMapping()
+        [TestMethod]
+        public void TestMaterialMapping()
         {
             Console.Write("Testing material mapping... ");
 
@@ -401,7 +411,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({allMaterials.Count} different materials across all files)");
         }
 
-        private void TestUnitHandling()
+        [TestMethod]
+        public void TestUnitHandling()
         {
             Console.Write("Testing unit handling... ");
 
@@ -434,7 +445,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({totalMetricTools} metric, {totalImperialTools} imperial tools across all files)");
         }
 
-        private void TestToolGeometry()
+        [TestMethod]
+        public void TestToolGeometry()
         {
             Console.Write("Testing tool geometry... ");
 
@@ -456,7 +468,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestManufacturerData()
+        [TestMethod]
+        public void TestManufacturerData()
         {
             Console.Write("Testing manufacturer data... ");
 
@@ -475,7 +488,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestRoundTripData()
+        [TestMethod]
+        public void TestRoundTripData()
         {
             Console.Write("Testing round-trip data... ");
 
@@ -503,7 +517,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestMaterialConversion()
+        [TestMethod]
+        public void TestMaterialConversion()
         {
             Console.Write("Testing material conversion... ");
 
@@ -539,7 +554,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestCapabilities()
+        [TestMethod]
+        public void TestCapabilities()
         {
             Console.Write("Testing capabilities... ");
             var converter = new Converter();

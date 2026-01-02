@@ -3,12 +3,15 @@ using System.IO;
 using System.Linq;
 using HSMAdvisorDatabase.ToolDataBase;
 using ImportCsvTools;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ImportCsvTools.Tests
 {
+    [TestClass]
     public class CsvImportTest
     {
-        private const string TestDataDirectory = @"ImportCsvTools.Tests\test-data";
+        // Get path to the project root
+        private const string TestDataDirectory = @"..\..\test-data";
 
         public static void Main(string[] args)
         {
@@ -34,6 +37,7 @@ namespace ImportCsvTools.Tests
             Console.ReadKey();
         }
 
+        [TestMethod]
         public void RunAllTests()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
@@ -47,6 +51,16 @@ namespace ImportCsvTools.Tests
             TestToolCount(database);
             TestLibraryName(database);
             TestToolMappings(database);
+        }
+
+        [TestMethod]
+        public void TestFilesExist()
+        {
+            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
+            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
+            
+            EnsureTestFilesExist(csvPath, mappingPath);
         }
 
         private static void EnsureTestFilesExist(string csvPath, string mappingPath)
@@ -64,6 +78,17 @@ namespace ImportCsvTools.Tests
             }
 
             Console.WriteLine("PASS");
+        }
+
+        [TestMethod]
+        public void TestImportedToolCount()
+        {
+            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
+            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            
+            TestToolCount(database);
         }
 
         private static void TestToolCount(DataBase database)
@@ -88,6 +113,17 @@ namespace ImportCsvTools.Tests
             Console.WriteLine("PASS");
         }
 
+        [TestMethod]
+        public void TestImportedLibraryName()
+        {
+            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
+            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            
+            TestLibraryName(database);
+        }
+
         private static void TestLibraryName(DataBase database)
         {
             Console.Write("Testing library name... ");
@@ -103,6 +139,17 @@ namespace ImportCsvTools.Tests
             }
 
             Console.WriteLine("PASS");
+        }
+
+        [TestMethod]
+        public void TestImportedToolMappings()
+        {
+            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
+            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            
+            TestToolMappings(database);
         }
 
         private static void TestToolMappings(DataBase database)
