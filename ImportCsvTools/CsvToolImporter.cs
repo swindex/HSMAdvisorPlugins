@@ -56,7 +56,61 @@ namespace ImportCsvTools
 
         public override void ExportTools(DataBase src)
         {
-            throw new NotImplementedException();
+            if (src == null || src.Tools == null || src.Tools.Count == 0)
+            {
+                MessageBox.Show("No tools to export.", "Export", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Step 1: Select mapping configuration
+            string mappingFileName;
+            using (var selectionForm = new MappingSelectionForm())
+            {
+                // Note: For export, we don't have CSV columns to display
+                // The form will just show available mapping files
+                if (selectionForm.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                mappingFileName = selectionForm.SelectedMappingFile;
+            }
+
+            if (string.IsNullOrWhiteSpace(mappingFileName))
+            {
+                return;
+            }
+
+            // Step 2: Select output CSV file path
+            var csvFileName = ShowSaveFileDialog(
+                "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
+                "Export tools to CSV file");
+
+            if (csvFileName == null)
+            {
+                return;
+            }
+
+            // Step 3: Perform export
+            try
+            {
+                ExportToFile(src, csvFileName, mappingFileName);
+                
+                MessageBox.Show(
+                    $"Successfully exported {src.Tools.Count} tool(s) to:\n{csvFileName}",
+                    "Export Complete",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Failed to export tools:\n{ex.Message}",
+                    "Export Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         public override void ModifyTools(DataBase db)
@@ -68,7 +122,8 @@ namespace ImportCsvTools
         {
             var caps = new List<Capability>
             {
-                new Capability("Import CSV Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools)
+                new Capability("Import CSV Tool Database", (int)ToolsPluginCapabilityMethod.ImportTools),
+                new Capability("Export CSV Tool Database", (int)ToolsPluginCapabilityMethod.ExportTools)
             };
 
             return caps;
@@ -487,6 +542,218 @@ namespace ImportCsvTools
             }
         }
 
+        public static void ExportToFile(DataBase database, string csvFileName, string mappingFileName)
+        {
+            if (string.IsNullOrWhiteSpace(csvFileName))
+            {
+                throw new ArgumentException("CSV file path must be provided.", nameof(csvFileName));
+            }
+
+            if (string.IsNullOrWhiteSpace(mappingFileName))
+            {
+                throw new ArgumentException("Mapping file path must be provided.", nameof(mappingFileName));
+            }
+
+            if (database == null || database.Tools == null || database.Tools.Count == 0)
+            {
+                throw new ArgumentException("Database must contain tools to export.", nameof(database));
+            }
+
+            var mapping = CsvMappingConfig.Load(mappingFileName);
+
+            using (var writer = new StreamWriter(csvFileName, false, System.Text.Encoding.UTF8))
+            {
+                // Write header row
+                var headers = new List<string>();
+                foreach (var map in mapping.Mappings)
+                {
+                    if (!string.IsNullOrWhiteSpace(map.CsvColumn))
+                    {
+                        headers.Add(EscapeCsvValue(map.CsvColumn));
+                    }
+                }
+                writer.WriteLine(string.Join(",", headers));
+
+                // Write data rows
+                foreach (var tool in database.Tools)
+                {
+                    var values = new List<string>();
+                    foreach (var map in mapping.Mappings)
+                    {
+                        var value = GetExportValue(tool, map, mapping.CsvInputUnits);
+                        values.Add(EscapeCsvValue(value));
+                    }
+                    writer.WriteLine(string.Join(",", values));
+                }
+            }
+        }
+
+        private static string GetExportValue(Tool tool, CsvMapping map, string csvUnits)
+        {
+            if (string.IsNullOrWhiteSpace(map.ToolField))
+            {
+                return string.Empty;
+            }
+
+            var property = typeof(Tool).GetProperty(
+                map.ToolField,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+
+            if (property == null)
+            {
+                return string.Empty;
+            }
+
+            var rawValue = property.GetValue(tool);
+            if (rawValue == null)
+            {
+                return map.DefaultValue ?? string.Empty;
+            }
+
+            string stringValue;
+
+            // Handle enum values - convert to enum name
+            if (property.PropertyType.IsEnum)
+            {
+                stringValue = rawValue.ToString();
+            }
+            // Handle numeric values with potential unit conversion
+            else if (rawValue is double || rawValue is float || rawValue is decimal)
+            {
+                double numericValue = Convert.ToDouble(rawValue);
+                numericValue = ConvertForExport(tool, map.ToolField, numericValue, csvUnits);
+                stringValue = numericValue.ToString(CultureInfo.InvariantCulture);
+            }
+            // Handle integer values (including enum underlying values)
+            else if (rawValue is int || rawValue is long || rawValue is short)
+            {
+                int intValue = Convert.ToInt32(rawValue);
+                
+                // Check if this is an enum field by looking at the EnumType or field name
+                if (!string.IsNullOrWhiteSpace(map.EnumType))
+                {
+                    // Convert int enum value to enum name
+                    var enumType = typeof(Enums).GetNestedType(map.EnumType, BindingFlags.Public);
+                    if (enumType != null && enumType.IsEnum)
+                    {
+                        try
+                        {
+                            stringValue = Enum.GetName(enumType, intValue) ?? intValue.ToString();
+                        }
+                        catch
+                        {
+                            stringValue = intValue.ToString();
+                        }
+                    }
+                    else
+                    {
+                        stringValue = intValue.ToString();
+                    }
+                }
+                else
+                {
+                    stringValue = intValue.ToString();
+                }
+            }
+            else
+            {
+                stringValue = rawValue.ToString();
+            }
+
+            // Apply reverse value map (Tool value → CSV value)
+            stringValue = ApplyReverseValueMap(map, stringValue);
+
+            // Apply export expression if defined (overrides everything else)
+            if (!string.IsNullOrWhiteSpace(map.ExportExpression))
+            {
+                try
+                {
+                    stringValue = ExpressionEvaluator.EvaluateExpression(map.ExportExpression, stringValue).ToString();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to evaluate export expression for field '{map.ToolField}': {ex.Message}");
+                    // Keep the original value if expression fails
+                }
+            }
+
+            return stringValue ?? string.Empty;
+        }
+
+        private static string ApplyReverseValueMap(CsvMapping map, string toolValue)
+        {
+            if (map.ValueMap == null || map.ValueMap.Count == 0)
+            {
+                return toolValue;
+            }
+
+            // Find the CSV key that maps to this tool value
+            foreach (var pair in map.ValueMap)
+            {
+                if (string.Equals(pair.Value, toolValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    return pair.Key;  // Return the CSV value (key)
+                }
+            }
+
+            return toolValue;  // Return as-is if no mapping found
+        }
+
+        private static double ConvertForExport(Tool tool, string fieldName, double toolValue, string csvUnits)
+        {
+            // If mixed units, export as-is (no conversion)
+            if (string.Equals(csvUnits, "mixed", StringComparison.OrdinalIgnoreCase))
+            {
+                return toolValue;
+            }
+
+            // Check if this field is dimensional (has corresponding _m flag)
+            var metricFlagName = fieldName + "_m";
+            var metricProperty = typeof(Tool).GetProperty(
+                metricFlagName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+
+            if (metricProperty == null || metricProperty.PropertyType != typeof(bool))
+            {
+                // Not a dimensional field, return as-is
+                return toolValue;
+            }
+
+            // Get the tool's unit flag
+            bool toolIsMetric = (bool)metricProperty.GetValue(tool);
+            bool csvIsMetric = string.Equals(csvUnits, "mm", StringComparison.OrdinalIgnoreCase);
+
+            // Convert if units don't match
+            if (toolIsMetric && !csvIsMetric)
+            {
+                // Tool is metric, CSV wants inches
+                return toolValue * 0.03937007874;  // mm → inches
+            }
+            else if (!toolIsMetric && csvIsMetric)
+            {
+                // Tool is inches, CSV wants metric
+                return toolValue * 25.4;  // inches → mm
+            }
+
+            return toolValue;  // Units match, no conversion
+        }
+
+        private static string EscapeCsvValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            // If value contains comma, quote, or newline, wrap in quotes and escape internal quotes
+            if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+            {
+                return "\"" + value.Replace("\"", "\"\"") + "\"";
+            }
+
+            return value;
+        }
+
         private string ShowOpenFileDialog(string filter, string title)
         {
             var openFileDialog = new OpenFileDialog
@@ -503,6 +770,27 @@ namespace ImportCsvTools
             if (ret == DialogResult.OK && File.Exists(openFileDialog.FileName))
             {
                 return openFileDialog.FileName;
+            }
+
+            return null;
+        }
+
+        private string ShowSaveFileDialog(string filter, string title)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                FileName = string.Empty,
+                Title = title,
+                Filter = filter,
+                AddExtension = true,
+                SupportMultiDottedExtensions = true,
+                OverwritePrompt = true
+            };
+
+            var ret = saveFileDialog.ShowDialog();
+            if (ret == DialogResult.OK)
+            {
+                return saveFileDialog.FileName;
             }
 
             return null;

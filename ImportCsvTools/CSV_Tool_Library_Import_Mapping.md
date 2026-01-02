@@ -1,12 +1,12 @@
-# CSV Tool Library Import Mapping Rules for HSMAdvisor
+# CSV Tool Library Import/Export Mapping Rules for HSMAdvisor
 
-This document outlines the mapping rules for importing CSV tool libraries into the HSMAdvisor database using the `ToolDatabase.Tool` class fields.
+This document outlines the mapping rules for importing and exporting CSV tool libraries with the HSMAdvisor database using the `ToolDatabase.Tool` class fields.
 
 ## Overview
 
-The CSV import process uses a JSON file to define how CSV columns map to Tool properties.
+The CSV import/export process uses a JSON mapping file to define how CSV columns map to Tool properties. The same mapping file can be used for both import and export operations, making round-trip conversions simple and consistent.
 
-**Required Fields:** Tool_type_id, Tool_material_id, Coating_id, Diameter - These must be mapped for successful import.
+**Required Fields for Import:** Tool_type_id, Tool_material_id, Coating_id, Diameter - These must be mapped for successful import.
 
 ## CsvMappingConfig Structure
 
@@ -19,7 +19,9 @@ The CSV import process uses a JSON file to define how CSV columns map to Tool pr
     {
       "CsvColumn": "Tool Diameter",
       "ToolField": "Diameter",
-      "ValueMap": {},
+      "ValueMap": [
+
+      ],
       "DefaultValue": "",
       "EnumType": "",
       "Expression": ""
@@ -119,14 +121,156 @@ If your CSV uses different values, use `ValueMap` to translate them:
 {
   "CsvColumn": "Material",
   "ToolField": "Tool_material_id",
-  "ValueMap": {
-    "HSS Steel": "HSS",
-    "Cobalt": "HSCobalt",
-    "Carb": "Carbide"
-  },
+  "ValueMap": [
+    {"Key": "HSS Steel", "Value": "HSS"},
+    {"Key": "Cobalt", "Value": "HSCobalt"},
+    {"Key": "Carb", "Value": "Carbide"}
+  ],
   "EnumType": "ToolMaterials"
 }
 ```
+
+## CSV Export Features
+
+The ImportCsvTools plugin now supports **bidirectional CSV import/export**. The same mapping files used for import can be used for export, with additional features for handling unit conversions and custom transformations.
+
+### Export-Specific Fields
+
+#### ExportExpression
+
+Similar to `Expression` for import, `ExportExpression` allows you to transform values during export:
+
+```json
+{
+  "CsvColumn": "Diameter_MM",
+  "ToolField": "Diameter",
+  "Expression": "value * 0.03937",          // Import: mm → inches
+  "ExportExpression": "value * 25.4"        // Export: inches → mm
+}
+```
+
+This enables true round-trip conversions where import and export transformations are inverses of each other.
+
+### Unit Handling During Export
+
+The `CsvInputUnits` field now supports three modes:
+
+#### 1. "in" (Inches)
+All dimensional values are exported in inches. If a tool has metric units (`Diameter_m = true`), values are automatically converted:
+```json
+{
+  "CsvInputUnits": "in"
+}
+```
+- Tool with Diameter=25.4mm → Exported as 1.0 inches
+
+#### 2. "mm" (Millimeters)
+All dimensional values are exported in millimeters. If a tool has imperial units (`Diameter_m = false`), values are automatically converted:
+```json
+{
+  "CsvInputUnits": "mm"
+}
+```
+- Tool with Diameter=1.0 inches → Exported as 25.4mm
+
+#### 3. "mixed" (Mixed Units) ✨ NEW
+Tools are exported in their native units without conversion. **Requires `Input_units_m` field mapping:**
+```json
+{
+  "CsvInputUnits": "mixed",
+  "Mappings": [
+    {
+      "CsvColumn": "Units",
+      "ToolField": "Input_units_m"
+    }
+  ]
+}
+```
+- Tool with Diameter=1.0 inches, Input_units_m=false → Exported as 1.0
+- Tool with Diameter=25.4mm, Input_units_m=true → Exported as 25.4
+
+### Value Map Reversal
+
+During export, `ValueMap` dictionaries are automatically reversed:
+
+**Import:** CSV value → Tool value
+```json
+{
+  "ValueMap": [
+    {"Key":"HSS Steel", "Value": "HSS"},
+    {"Key":"Carb", "Value": "Carbide"},
+  ]
+}
+```
+
+**Export:** Tool value → CSV value
+- Tool with Tool_material_id=HSS → Exported as "HSS Steel"
+- Tool with Tool_material_id=Carbide → Exported as "Carb"
+
+### Export Workflow
+
+1. Select **Export CSV Tool Database** from HSMAdvisor plugin menu
+2. Choose a mapping configuration file
+3. Select output CSV file location
+4. Plugin exports all tools using the mapping configuration
+
+### Round-Trip Example
+
+Here's a complete mapping for round-trip import/export with unit conversion:
+
+```json
+{
+  "LibraryName": "Metric Tools",
+  "CsvInputUnits": "mm",
+  "Mappings": [
+    {
+      "CsvColumn": "Tool Type",
+      "ToolField": "Tool_type_id",
+      "EnumType": "ToolTypes",
+      "ValueMap": [
+        {"Key": "End Mill", "Value": "SolidEndMill"},
+        {"Key": "Ball Mill", "Value": "SolidBallMill"}
+      ]
+    },
+    {
+      "CsvColumn": "Material",
+      "ToolField": "Tool_material_id",
+      "EnumType": "ToolMaterials",
+      "ValueMap": [
+        {"Key": "HSS Steel", "Value": "HSS"},
+        {"Key": "Cobalt", "Value": "HSCobalt"},
+        {"Key": "Carb", "Value": "Carbide"}
+      ]
+    },
+    {
+      "CsvColumn": "Coating",
+      "ToolField": "Coating_id",
+      "EnumType": "ToolCoatings",
+      "DefaultValue": "Uncoated"
+    },
+    {
+      "CsvColumn": "Diameter_MM",
+      "ToolField": "Diameter",
+      "Expression": "value * 0.03937",
+      "ExportExpression": "value * 25.4"
+    },
+    {
+      "CsvColumn": "Length_MM",
+      "ToolField": "Length",
+      "Expression": "value * 0.03937",
+      "ExportExpression": "value * 25.4"
+    },
+    {
+      "CsvColumn": "Flutes",
+      "ToolField": "Flute_N"
+    }
+  ]
+}
+```
+
+This mapping:
+- **Imports** CSV with mm values → Converts to inches → Stores in HSMAdvisor
+- **Exports** HSMAdvisor tools (inches) → Converts to mm → Writes to CSV
 
 ## Notes
 
@@ -134,7 +278,11 @@ If your CSV uses different values, use `ValueMap` to translate them:
 - Numeric fields are parsed as double or int as appropriate
 - The `Toolangle` field is a convenience property that depends on `Toolangle_mode`; map it separately if needed
 - `CsvInputUnits` affects how dimensional values are interpreted (default "in" for inches)
-- Use `DefaultValue` for missing CSV columns
-- `Expression` can be used for calculated mappings if needed
-- The `Input_units_m` field can be used to import an individual tool as a metric tool.
-    you can use an expression to infer the units from a column value.
+- Use `DefaultValue` for missing CSV columns or when exporting tools without values
+- `Expression` can be used for calculated mappings during import
+- `ExportExpression` can be used for calculated mappings during export
+- The `Input_units_m` field can be used to import an individual tool as a metric tool
+- You can use an expression to infer the units from a column value
+- When using `CsvInputUnits: "mixed"`, the `Input_units_m` field **must** be mapped
+- Export automatically handles enum-to-string conversion (e.g., Tool_type_id=2 → "SolidEndMill")
+- CSV values containing commas, quotes, or newlines are automatically escaped during export

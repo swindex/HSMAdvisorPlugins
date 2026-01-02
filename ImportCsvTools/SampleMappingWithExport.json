@@ -1,0 +1,58 @@
+{
+    "LibraryName": "CSV Import/Export Sample",
+    "AllowInvalidToolImport": false,
+    "CsvInputUnits": "mm",
+    "Mappings": [
+        {
+            "CsvColumn": "Tool Type",
+            "ToolField": "Tool_type_id",
+            "EnumType": "ToolTypes",
+            "DefaultValue": "SolidEndMill",
+            "ValueMap": {
+                "End Mill": "SolidEndMill",
+                "Ball Mill": "SolidBallMill",
+                "Drill": "JobberTwistDrill"
+            }
+        },
+        {
+            "CsvColumn": "Tool Material",
+            "ToolField": "Tool_material_id",
+            "EnumType": "ToolMaterials",
+            "ValueMap": {
+                "Carbide": "Carbide",
+                "HSS": "HSS",
+                "Cobalt": "HSCobalt"
+            }
+        },
+        {
+            "CsvColumn": "Coating",
+            "ToolField": "Coating_id",
+            "EnumType": "ToolCoatings",
+            "DefaultValue": "Uncoated"
+        },
+        {
+            "CsvColumn": "Tool Name",
+            "ToolField": "Comment"
+        },
+        {
+            "CsvColumn": "Tool Number",
+            "ToolField": "Number"
+        },
+        {
+            "CsvColumn": "Diameter_MM",
+            "ToolField": "Diameter",
+            "Expression": "value * 0.03937",
+            "ExportExpression": "value * 25.4"
+        },
+        {
+            "CsvColumn": "Length_MM",
+            "ToolField": "Length",
+            "Expression": "value * 0.03937",
+            "ExportExpression": "value * 25.4"
+        },
+        {
+            "CsvColumn": "Flutes",
+            "ToolField": "Flutes"
+        }
+    ]
+}

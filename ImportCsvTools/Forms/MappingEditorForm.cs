@@ -148,6 +148,7 @@ namespace ImportCsvTools.Forms
                 mapping.DefaultValue,
                 mapping.EnumType,
                 string.Empty, // Expression - will be set properly below
+                string.Empty, // ExportExpression - will be set properly below
                 mapping.ValueMap != null && mapping.ValueMap.Count > 0 ? $"{mapping.ValueMap.Count} item(s)" : string.Empty
             );
 
@@ -156,8 +157,9 @@ namespace ImportCsvTools.Forms
             // Store the actual ValueMap in the row's Tag
             row.Tag = mapping.ValueMap ?? new Dictionary<string, string>();
 
-            // Set expression properly (stores full in tag, displays truncated)
+            // Set expressions properly (stores full in tag, displays truncated)
             SetExpression(row, mapping.Expression);
+            SetExportExpression(row, mapping.ExportExpression);
         }
 
         private void btnAddMapping_Click(object sender, EventArgs e)
@@ -226,6 +228,28 @@ namespace ImportCsvTools.Forms
                     if (editor.ShowDialog() == DialogResult.OK)
                     {
                         SetExpression(row, editor.Expression);
+                    }
+                }
+            }
+
+            // Handle ExportExpression button click
+            if (e.ColumnIndex == dataGridView.Columns["colExportExpression"].Index)
+            {
+                var row = dataGridView.Rows[e.RowIndex];
+                var exportExpression = GetFullExportExpression(row);
+                var csvColumnName = row.Cells["colCsvColumn"].Value?.ToString()?.Trim();
+
+                using (var editor = new ExpressionEditorForm())
+                {
+                    editor.Expression = exportExpression;
+                    editor.Text = "Edit Export Expression";
+                    
+                    // Note: For export expressions, we don't pass CSV column info
+                    // because the expression operates on Tool field values, not CSV values
+                    
+                    if (editor.ShowDialog() == DialogResult.OK)
+                    {
+                        SetExportExpression(row, editor.Expression);
                     }
                 }
             }
@@ -372,6 +396,38 @@ namespace ImportCsvTools.Forms
         }
 
         /// <summary>
+        /// Gets the full export expression stored in the row's tag
+        /// </summary>
+        private string GetFullExportExpression(DataGridViewRow row)
+        {
+            // ExportExpression is stored in a special tag property to keep the full text
+            if (row.Cells["colExportExpression"].Tag is string fullExportExpression)
+            {
+                return fullExportExpression;
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// Sets the export expression, storing full text in tag and displaying truncated version
+        /// </summary>
+        private void SetExportExpression(DataGridViewRow row, string exportExpression)
+        {
+            // Store full export expression in cell's tag
+            row.Cells["colExportExpression"].Tag = exportExpression;
+            
+            // Display truncated version in the button
+            if (string.IsNullOrWhiteSpace(exportExpression))
+            {
+                row.Cells["colExportExpression"].Value = "Edit...";
+            }
+            else
+            {
+                row.Cells["colExportExpression"].Value = TruncateExpression(exportExpression);
+            }
+        }
+
+        /// <summary>
         /// Truncates expression for display
         /// </summary>
         private string TruncateExpression(string expression)
@@ -402,6 +458,7 @@ namespace ImportCsvTools.Forms
                     DefaultValue = row.Cells["colDefaultValue"].Value?.ToString()?.Trim(),
                     EnumType = row.Cells["colEnumType"].Value?.ToString()?.Trim(),
                     Expression = GetFullExpression(row), // Get full expression from tag
+                    ExportExpression = GetFullExportExpression(row), // Get full export expression from tag
                     ValueMap = row.Tag as Dictionary<string, string> ?? new Dictionary<string, string>()
                 };
 
@@ -486,6 +543,10 @@ namespace ImportCsvTools.Forms
                     if (map.Expression=="Edit...")
                     {
                         map.Expression = null;
+                    }
+                    if (map.ExportExpression=="Edit...")
+                    {
+                        map.ExportExpression = null;
                     }
                 }
 

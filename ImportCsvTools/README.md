@@ -1,20 +1,22 @@
 # ImportCsvTools Plugin
 
-A flexible CSV import plugin for HSMAdvisor that allows importing tool libraries from CSV files using customizable JSON mapping configurations.
+A flexible CSV import/export plugin for HSMAdvisor that allows importing and exporting tool libraries from/to CSV files using customizable JSON mapping configurations.
 
 ## Overview
 
-The ImportCsvTools plugin enables importing tool data from CSV files into HSMAdvisor. It uses a JSON-based mapping system that provides flexibility in handling various CSV formats without code changes.
+The ImportCsvTools plugin enables **bidirectional CSV import and export** of tool data with HSMAdvisor. It uses a JSON-based mapping system that provides flexibility in handling various CSV formats without code changes. The same mapping configuration can be used for both import and export operations, making round-trip conversions simple and consistent.
 
 ### Key Features
 
+- **Bidirectional Import/Export** - Import tools from CSV and export back to CSV ✨ NEW
 - **Flexible CSV Mapping** - JSON configuration defines column-to-field mappings
-- **Expression Evaluation** - Support for calculated values and transformations
-- **Value Mapping** - Translate external values to HSMAdvisor enums
+- **Expression Evaluation** - Support for calculated values and transformations (import and export)
+- **Value Mapping** - Translate external values to HSMAdvisor enums (bidirectional)
 - **Default Values** - Fallback values for missing CSV columns
-- **Unit Handling** - Automatic metric/imperial unit conversion
+- **Unit Handling** - Automatic metric/imperial unit conversion with "mixed" units support ✨ NEW
 - **Visual Mapping Editor** - GUI for creating and editing mappings
 - **Validation** - Configurable import validation rules
+- **Round-Trip Support** - Same mapping file works for import and export
 
 ## Installation
 
@@ -34,17 +36,39 @@ The ImportCsvTools plugin enables importing tool data from CSV files into HSMAdv
 
 ## Usage
 
-### Quick Start
+### Import Workflow
 
-1. In HSMAdvisor, go to **Tools** → **Import CSV Tools**
+1. In HSMAdvisor, go to **Tools** → **Import CSV Tool Database**
 2. Select your CSV file
 3. Choose or create a mapping configuration (JSON file)
 4. Review and confirm the import
 5. Tools will be added to your HSMAdvisor database
 
+### Export Workflow ✨ NEW
+
+1. In HSMAdvisor, go to **Tools** → **Export CSV Tool Database**
+2. Choose a mapping configuration (same files used for import)
+3. Select output CSV file location
+4. All tools in the database will be exported to CSV
+
 ### Creating a Mapping File
 
 The plugin includes a visual mapping editor, or you can create JSON mapping files manually.
+
+### Round-Trip Import/Export
+
+The same mapping configuration works for both import and export:
+
+```
+Import: CSV (vendor format) → HSMAdvisor (internal format)
+Export: HSMAdvisor (internal format) → CSV (vendor format)
+```
+
+This enables:
+- Backing up tool databases to CSV
+- Sharing tool data with other systems
+- Migrating between HSMAdvisor installations
+- Creating vendor-specific tool catalogs
 
 ## CSV Mapping Configuration
 

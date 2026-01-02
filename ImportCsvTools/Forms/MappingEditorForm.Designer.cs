@@ -54,6 +54,7 @@ namespace ImportCsvTools.Forms
             this.colDefaultValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colEnumType = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colExpression = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.colExportExpression = new System.Windows.Forms.DataGridViewButtonColumn();
             this.colValueMapButton = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
@@ -143,6 +144,7 @@ namespace ImportCsvTools.Forms
             this.colDefaultValue,
             this.colEnumType,
             this.colExpression,
+            this.colExportExpression,
             this.colValueMapButton});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(3, 77);
@@ -379,6 +381,14 @@ namespace ImportCsvTools.Forms
     "condition, trueValue, falseValue) for logic\n\nSupported comparisons: = <> < <= > " +
     ">=\n\nLogical operators: AND OR NOT";
             // 
+            // colExportExpression
+            // 
+            this.colExportExpression.HeaderText = "Export Expression";
+            this.colExportExpression.Name = "colExportExpression";
+            this.colExportExpression.ToolTipText = "Expression for converting HSMAdvisor values back to CSV format during export\n\nva" +
+    "lue represents the current Tool field value\n\nUse standard math: + - * / ( )\n\nUse" +
+    " IIF(condition, trueValue, falseValue) for logic";
+            // 
             // colValueMapButton
             // 
             this.colValueMapButton.HeaderText = "Value Map";
@@ -442,6 +452,7 @@ namespace ImportCsvTools.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colDefaultValue;
         private System.Windows.Forms.DataGridViewComboBoxColumn colEnumType;
         private System.Windows.Forms.DataGridViewButtonColumn colExpression;
+        private System.Windows.Forms.DataGridViewButtonColumn colExportExpression;
         private System.Windows.Forms.DataGridViewButtonColumn colValueMapButton;
     }
 }

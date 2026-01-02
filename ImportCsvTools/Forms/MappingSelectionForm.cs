@@ -28,9 +28,14 @@ namespace ImportCsvTools.Forms
 
         private void InitializeMappingDirectory()
         {
+            // If Release build, use AppData; if Debug build, use project directory for easier access
+#if DEBUG
+            var projectDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
+            _mappingDirectory = Path.Combine(projectDir, "HSMAdvisorAppData", "CsvImportMappings");
+#else
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             _mappingDirectory = Path.Combine(appDataPath, "HSMAdvisor", "CSVImportMappings");
-
+#endif
             if (!Directory.Exists(_mappingDirectory))
             {
                 try

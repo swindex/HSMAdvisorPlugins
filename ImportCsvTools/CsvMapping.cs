@@ -34,6 +34,28 @@ namespace ImportCsvTools
                 }
 
                 result.Mappings = result.Mappings ?? new List<CsvMapping>();
+                
+                // Validate mixed units requirement
+                if (string.Equals(result.CsvInputUnits, "mixed", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool hasInputUnitsMapping = false;
+                    foreach (var mapping in result.Mappings)
+                    {
+                        if (string.Equals(mapping.ToolField, "Input_units_m", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(mapping.ToolField, "_Input_units_m", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasInputUnitsMapping = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasInputUnitsMapping)
+                    {
+                        throw new InvalidOperationException(
+                            "When CsvInputUnits is 'mixed', the Input_units_m (or _Input_units_m) field must be mapped to properly handle tools with different unit systems.");
+                    }
+                }
+                
                 return result;
             }
         }
@@ -59,5 +81,8 @@ namespace ImportCsvTools
 
         [DataMember]
         public string Expression { get; set; }
+
+        [DataMember]
+        public string ExportExpression { get; set; }
     }
 }
