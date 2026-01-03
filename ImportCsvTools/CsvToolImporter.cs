@@ -629,6 +629,22 @@ namespace ImportCsvTools
             {
                 double numericValue = Convert.ToDouble(rawValue);
                 numericValue = ConvertForExport(tool, map.ToolField, numericValue, csvUnits);
+
+                // Apply export expression to numeric value before string conversion
+                if (!string.IsNullOrWhiteSpace(map.ExportExpression))
+                {
+                    try
+                    {
+                        var expressionResult = ExpressionEvaluator.EvaluateExpression(map.ExportExpression, numericValue.ToString(CultureInfo.InvariantCulture));
+                        numericValue = Convert.ToDouble(expressionResult);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to evaluate export expression for field '{map.ToolField}': {ex.Message}");
+                        // Keep the original value if expression fails
+                    }
+                }
+
                 stringValue = numericValue.ToString(CultureInfo.InvariantCulture);
             }
             // Handle integer values (including enum underlying values)
@@ -669,20 +685,6 @@ namespace ImportCsvTools
 
             // Apply reverse value map (Tool value → CSV value)
             stringValue = ApplyReverseValueMap(map, stringValue);
-
-            // Apply export expression if defined (overrides everything else)
-            if (!string.IsNullOrWhiteSpace(map.ExportExpression))
-            {
-                try
-                {
-                    stringValue = ExpressionEvaluator.EvaluateExpression(map.ExportExpression, stringValue).ToString();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Failed to evaluate export expression for field '{map.ToolField}': {ex.Message}");
-                    // Keep the original value if expression fails
-                }
-            }
 
             return stringValue ?? string.Empty;
         }
