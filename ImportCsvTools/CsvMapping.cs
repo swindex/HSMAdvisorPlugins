@@ -8,7 +8,7 @@ using System.Runtime.Serialization.Json;
 namespace ImportCsvTools
 {
     [DataContract]
-    internal class CsvMappingConfig
+    public class CsvMappingConfig
     {
         [DataMember]
         public string LibraryName { get; set; }
@@ -34,7 +34,7 @@ namespace ImportCsvTools
                 }
 
                 result.Mappings = result.Mappings ?? new List<CsvMapping>();
-                
+
                 // Validate mixed units requirement
                 if (string.Equals(result.CsvInputUnits, "mixed", StringComparison.OrdinalIgnoreCase))
                 {
@@ -48,21 +48,21 @@ namespace ImportCsvTools
                             break;
                         }
                     }
-                    
+
                     if (!hasInputUnitsMapping)
                     {
                         throw new InvalidOperationException(
                             "When CsvInputUnits is 'mixed', the Input_units_m (or _Input_units_m) field must be mapped to properly handle tools with different unit systems.");
                     }
                 }
-                
+
                 return result;
             }
         }
     }
 
     [DataContract]
-    internal class CsvMapping
+    public class CsvMapping
     {
         [DataMember]
         public string CsvColumn { get; set; }

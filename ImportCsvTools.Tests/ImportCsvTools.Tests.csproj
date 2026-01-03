@@ -45,15 +45,27 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvImportTest.cs" />
+    <Compile Include="CsvExportTest.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="test-data\Tool_Master_Import_for_HSMA.mapping.json" />
     <None Include="test-data\Tool Master Import for HSMA.csv" />
+    <None Include="test-output\test_enum_values.csv" />
+    <None Include="test-output\test_export_creates_file.csv" />
+    <None Include="test-output\test_missing_values.csv" />
+    <None Include="test-output\test_roundtrip.csv" />
+    <None Include="test-output\test_tool_count.csv" />
+    <None Include="test-output\test_tool_properties.csv" />
+    <None Include="test-output\test_unit_conversion.csv" />
+    <None Include="test-output\test_value_maps.csv" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ImportCsvTools\ImportCsvTools.csproj">

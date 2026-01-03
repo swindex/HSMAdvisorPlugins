@@ -37,7 +37,7 @@ namespace ImportCsvTools
             using (var selectionForm = new MappingSelectionForm())
             {
                 selectionForm.CsvColumns = csvColumns;
-                
+
                 if (selectionForm.ShowDialog() != DialogResult.OK)
                 {
                     return null;
@@ -58,7 +58,7 @@ namespace ImportCsvTools
         {
             if (src == null || src.Tools == null || src.Tools.Count == 0)
             {
-                MessageBox.Show("No tools to export.", "Export", 
+                MessageBox.Show("No tools to export.", "Export",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -96,7 +96,7 @@ namespace ImportCsvTools
             try
             {
                 ExportToFile(src, csvFileName, mappingFileName);
-                
+
                 MessageBox.Show(
                     $"Successfully exported {src.Tools.Count} tool(s) to:\n{csvFileName}",
                     "Export Complete",
@@ -132,7 +132,7 @@ namespace ImportCsvTools
         private static List<CsvImportColumnInfo> ReadCsvColumnsWithData(string csvFileName)
         {
             var columns = new List<CsvImportColumnInfo>();
-            
+
             try
             {
                 using (var parser = new TextFieldParser(csvFileName))
@@ -273,7 +273,7 @@ namespace ImportCsvTools
                         {
                             continue;
                         }
-                        
+
                         if (!TryApplyMapping(tool, map, rawValue, out var error))
                         {
                             Debug.WriteLine(error);
@@ -291,7 +291,7 @@ namespace ImportCsvTools
                         // If mapping specifies CSV input units as mm, set metric flags
                         SetMetricFlags(tool);
                     }
-                
+
 
                     if (string.IsNullOrWhiteSpace(tool.Library))
                     {
@@ -342,7 +342,13 @@ namespace ImportCsvTools
             {
                 if (headerPos >= 0 && headerPos < fields.Length)
                 {
-                    return fields[headerPos]?.Trim();
+                    var value = fields[headerPos]?.Trim();
+                    // Unescape newline sequences that were escaped during export
+                    if (value != null)
+                    {
+                        value = value.Replace("\\n", "\n");
+                    }
+                    return value;
                 }
             }
 
@@ -379,7 +385,7 @@ namespace ImportCsvTools
                 error = $"Unable to convert value '{value}' for field '{map.ToolField}'.";
                 return false;
             }
-                        
+
             property.SetValue(tool, converted);
             return true;
         }
@@ -439,7 +445,7 @@ namespace ImportCsvTools
                 {
                     return false;
                 }
-               
+
             }
 
             if (targetType == typeof(int))
@@ -488,7 +494,7 @@ namespace ImportCsvTools
 
             return false;
         }
-                
+
         private static bool TryParseBool(string rawValue, out bool value)
         {
             if (bool.TryParse(rawValue, out value))
@@ -523,12 +529,12 @@ namespace ImportCsvTools
         private static void SetMetricFlags(Tool tool)
         {
             var properties = typeof(Tool).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            
+
             foreach (var property in properties)
             {
                 // Check if property is a boolean and ends with "_m"
-                if (property.PropertyType == typeof(bool) && 
-                    property.CanWrite && 
+                if (property.PropertyType == typeof(bool) &&
+                    property.CanWrite &&
                     property.Name.EndsWith("_m", StringComparison.OrdinalIgnoreCase))
                 {
                     try
@@ -629,7 +635,7 @@ namespace ImportCsvTools
             else if (rawValue is int || rawValue is long || rawValue is short)
             {
                 int intValue = Convert.ToInt32(rawValue);
-                
+
                 // Check if this is an enum field by looking at the EnumType or field name
                 if (!string.IsNullOrWhiteSpace(map.EnumType))
                 {
@@ -746,13 +752,16 @@ namespace ImportCsvTools
                 return string.Empty;
             }
 
-            // If value contains comma, quote, or newline, wrap in quotes and escape internal quotes
-            if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+            // Replace newlines and carriage returns with escaped sequences for better compatibility
+            var escapedValue = value.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
+
+            // If value contains comma or quote, wrap in quotes and escape internal quotes
+            if (escapedValue.Contains(",") || escapedValue.Contains("\""))
             {
-                return "\"" + value.Replace("\"", "\"\"") + "\"";
+                return "\"" + escapedValue.Replace("\"", "\"\"") + "\"";
             }
 
-            return value;
+            return escapedValue;
         }
 
         private string ShowOpenFileDialog(string filter, string title)
@@ -796,5 +805,5 @@ namespace ImportCsvTools
 
             return null;
         }
-    }    
+    }
 }
