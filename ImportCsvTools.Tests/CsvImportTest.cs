@@ -41,12 +41,12 @@ namespace ImportCsvTools.Tests
         public void RunAllTests()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
-            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
-            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
+            var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
+            var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
 
             EnsureTestFilesExist(csvPath, mappingPath);
 
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
 
             TestToolCount(database);
             TestLibraryName(database);
@@ -57,8 +57,8 @@ namespace ImportCsvTools.Tests
         public void TestFilesExist()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
-            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
-            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
+            var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
+            var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
             
             EnsureTestFilesExist(csvPath, mappingPath);
         }
@@ -84,9 +84,9 @@ namespace ImportCsvTools.Tests
         public void TestImportedToolCount()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
-            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
-            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
+            var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
             
             TestToolCount(database);
         }
@@ -105,7 +105,7 @@ namespace ImportCsvTools.Tests
                 throw new Exception("No tools were imported");
             }
 
-            if (database.Tools.Count != 3)
+            if (database.Tools.Count != 288)
             {
                 throw new Exception($"Expected 3 tools, found {database.Tools.Count}");
             }
@@ -117,9 +117,9 @@ namespace ImportCsvTools.Tests
         public void TestImportedLibraryName()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
-            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
-            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
+            var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
             
             TestLibraryName(database);
         }
@@ -128,14 +128,16 @@ namespace ImportCsvTools.Tests
         {
             Console.Write("Testing library name... ");
 
-            if (database.Libraries == null || !database.Libraries.Any(library => library.Name == "CSV Import"))
+            var tlibname = "Tool Master Import for HSMA";
+
+            if (database.Libraries == null || !database.Libraries.Any(library => library.Name == tlibname))
             {
-                throw new Exception("Expected library name 'CSV Import' was not created");
+                throw new Exception($"Expected library name '{tlibname}' was not created");
             }
 
-            if (database.Tools.Any(tool => tool.Library != "CSV Import"))
+            if (database.Tools.Any(tool => tool.Library != tlibname))
             {
-                throw new Exception("Not all tools are assigned to the 'CSV Import' library");
+                throw new Exception($"Not all tools are assigned to the '{tlibname}' library");
             }
 
             Console.WriteLine("PASS");
@@ -145,9 +147,9 @@ namespace ImportCsvTools.Tests
         public void TestImportedToolMappings()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
-            var csvPath = Path.Combine(testDataDir, "sample-tools.csv");
-            var mappingPath = Path.Combine(testDataDir, "sample-mapping.json");
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath);
+            var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
+            var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
             
             TestToolMappings(database);
         }
@@ -156,18 +158,18 @@ namespace ImportCsvTools.Tests
         {
             Console.Write("Testing mapped tool values... ");
 
-            var firstTool = database.Tools.FirstOrDefault(tool => tool.Number == 1);
+            var firstTool = database.Tools.FirstOrDefault(tool => tool.Number == 10);
             if (firstTool == null)
             {
                 throw new Exception("Tool number 1 was not imported");
             }
 
-            if (firstTool.Comment != "Sample End Mill")
+            if (firstTool.Comment != "1/32 x 3/32 4 Flt Carb End Mill")
             {
                 throw new Exception($"Unexpected comment for tool 1: {firstTool.Comment}");
             }
 
-            if (Math.Abs(firstTool.Diameter - 0.5) > 0.0001)
+            if (Math.Abs(firstTool.Diameter - 0.03125) > 0.0001)
             {
                 throw new Exception($"Unexpected diameter for tool 1: {firstTool.Diameter}");
             }
@@ -177,7 +179,7 @@ namespace ImportCsvTools.Tests
                 throw new Exception("Tool material mapping for tool 1 failed");
             }
 
-            var thirdTool = database.Tools.FirstOrDefault(tool => tool.Number == 3);
+            var thirdTool = database.Tools.FirstOrDefault(tool => tool.Number == 60);
             if (thirdTool == null)
             {
                 throw new Exception("Tool number 3 was not imported");

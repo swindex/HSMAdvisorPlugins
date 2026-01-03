@@ -203,7 +203,7 @@ namespace ImportCsvTools
             return columns;
         }
 
-        public static DataBase ImportFromFiles(string csvFileName, string mappingFileName)
+        public static DataBase ImportFromFiles(string csvFileName, string mappingFileName, MessageFlags msgFlag = MessageFlags.Error)
         {
             if (string.IsNullOrWhiteSpace(csvFileName))
             {
@@ -319,7 +319,8 @@ namespace ImportCsvTools
             }
 
             // Show summary if tools were skipped
-            if (skippedToolsCount > 0)
+
+            if (skippedToolsCount > 0 && msgFlag > 0)
             {
                 MessageBox.Show(
                     $"Import completed.\n\n" +

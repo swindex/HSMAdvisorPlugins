@@ -423,8 +423,8 @@ public void TestCsvImport()
 ### Test Data
 
 Sample files in `test-data/`:
-- `sample-tools.csv` - Example CSV file
-- `sample-mapping.json` - Example mapping configuration
+- `Tool Master Import for HSMA.csv` - Example CSV file
+- `Tool_Master_Import_for_HSMA.mapping.json` - Example mapping configuration
 
 ### Manual Testing with Plugin Test Runner
 

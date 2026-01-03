@@ -52,8 +52,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="test-data\sample-mapping.json" />
-    <None Include="test-data\sample-tools.csv" />
+    <None Include="test-data\Tool_Master_Import_for_HSMA.mapping.json" />
+    <None Include="test-data\Tool Master Import for HSMA.csv" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ImportCsvTools\ImportCsvTools.csproj">

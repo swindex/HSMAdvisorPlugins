@@ -329,8 +329,8 @@ The Plugin Test Runner follows these patterns:
 public void TestCsvImport()
 {
     var importer = new CsvToolImporter();
-    var mapping = LoadMapping("sample-mapping.json");
-    var csv = File.ReadAllText("sample-tools.csv");
+    var mapping = LoadMapping("Tool_Master_Import_for_HSMA.mapping.json");
+    var csv = File.ReadAllText("Tool Master Import for HSMA.csv");
     
     var result = importer.Import(csv, mapping);
     

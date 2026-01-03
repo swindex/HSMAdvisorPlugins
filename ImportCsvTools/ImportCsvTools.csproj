@@ -70,6 +70,7 @@
     <Compile Include="CsvMapping.cs" />
     <Compile Include="CsvToolImporter.cs" />
     <Compile Include="ExpressionEvaluator.cs" />
+    <Compile Include="MessageFlags.cs" />
     <Compile Include="ReflectionHelpers.cs" />
     <Compile Include="Forms\ValueMapEditorForm.cs">
       <SubType>Form</SubType>
