@@ -40,6 +40,20 @@ namespace ImportCsvTools.Tests
                 allPassed = false;
             }
 
+            try
+            {
+                Console.WriteLine("Running CSV Completeness Tests...");
+                Console.WriteLine("---------------------------------");
+                var completenessTest = new CsvCompletenessTest();
+                completenessTest.RunAllTests();
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CSV Completeness test failed: {ex.Message}");
+                allPassed = false;
+            }
+
             if (allPassed)
             {
                 Console.WriteLine("=========================");

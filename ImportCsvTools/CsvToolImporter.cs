@@ -131,65 +131,9 @@ namespace ImportCsvTools
 
         private static List<CsvImportColumnInfo> ReadCsvColumnsWithData(string csvFileName)
         {
-            var columns = new List<CsvImportColumnInfo>();
-
             try
             {
-                using (var parser = new TextFieldParser(csvFileName))
-                {
-                    parser.HasFieldsEnclosedInQuotes = true;
-                    parser.SetDelimiters(",");
-
-                    // Read first row as headers
-                    if (parser.EndOfData)
-                    {
-                        return columns;
-                    }
-
-                    var headers = parser.ReadFields();
-                    if (headers == null || headers.Length == 0)
-                    {
-                        return columns;
-                    }
-
-                    // Initialize columns with headers and HashSets for unique values
-                    var uniqueValueSets = new List<HashSet<string>>();
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        var trimmedHeader = headers[i]?.Trim();
-                        if (!string.IsNullOrWhiteSpace(trimmedHeader))
-                        {
-                            columns.Add(new CsvImportColumnInfo(trimmedHeader));
-                            uniqueValueSets.Add(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-                        }
-                    }
-
-                    // Read all data rows and collect unique values
-                    while (!parser.EndOfData)
-                    {
-                        var fields = parser.ReadFields();
-                        if (fields == null)
-                        {
-                            continue;
-                        }
-
-                        for (int i = 0; i < fields.Length && i < uniqueValueSets.Count; i++)
-                        {
-                            var value = fields[i]?.Trim();
-                            if (!string.IsNullOrWhiteSpace(value))
-                            {
-                                uniqueValueSets[i].Add(value);
-                            }
-                        }
-                    }
-
-                    // Convert HashSets to sorted lists
-                    for (int i = 0; i < columns.Count; i++)
-                    {
-                        columns[i].UniqueValues = new List<string>(uniqueValueSets[i]);
-                        columns[i].UniqueValues.Sort(StringComparer.OrdinalIgnoreCase);
-                    }
-                }
+                return CsvFileHandler.ReadCsvColumns(csvFileName);
             }
             catch (Exception ex)
             {
@@ -198,9 +142,8 @@ namespace ImportCsvTools
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                return new List<CsvImportColumnInfo>();
             }
-
-            return columns;
         }
 
         public static DataBase ImportFromFiles(string csvFileName, string mappingFileName, MessageFlags msgFlag = MessageFlags.Error)
@@ -346,7 +289,7 @@ namespace ImportCsvTools
                     // Unescape newline sequences that were escaped during export
                     if (value != null)
                     {
-                        value = value.Replace("\\n", "\n");
+                        value = CsvFileHandler.UnescapeCsvValue(value);
                     }
                     return value;
                 }
@@ -568,31 +511,31 @@ namespace ImportCsvTools
 
             var mapping = CsvMappingConfig.Load(mappingFileName);
 
-            using (var writer = new StreamWriter(csvFileName, false, System.Text.Encoding.UTF8))
+            // Build headers
+            var headers = new List<string>();
+            foreach (var map in mapping.Mappings)
             {
-                // Write header row
-                var headers = new List<string>();
-                foreach (var map in mapping.Mappings)
+                if (!string.IsNullOrWhiteSpace(map.CsvColumn))
                 {
-                    if (!string.IsNullOrWhiteSpace(map.CsvColumn))
-                    {
-                        headers.Add(EscapeCsvValue(map.CsvColumn));
-                    }
-                }
-                writer.WriteLine(string.Join(",", headers));
-
-                // Write data rows
-                foreach (var tool in database.Tools)
-                {
-                    var values = new List<string>();
-                    foreach (var map in mapping.Mappings)
-                    {
-                        var value = GetExportValue(tool, map, mapping.CsvInputUnits);
-                        values.Add(EscapeCsvValue(value));
-                    }
-                    writer.WriteLine(string.Join(",", values));
+                    headers.Add(map.CsvColumn);
                 }
             }
+
+            // Build data rows
+            var rows = new List<List<string>>();
+            foreach (var tool in database.Tools)
+            {
+                var values = new List<string>();
+                foreach (var map in mapping.Mappings)
+                {
+                    var value = GetExportValue(tool, map, mapping.CsvInputUnits);
+                    values.Add(value);
+                }
+                rows.Add(values);
+            }
+
+            // Write to CSV using CsvFileHandler
+            CsvFileHandler.WriteCsvFile(csvFileName, headers, rows);
         }
 
         private static string GetExportValue(Tool tool, CsvMapping map, string csvUnits)
@@ -747,24 +690,6 @@ namespace ImportCsvTools
             return toolValue;  // Units match, no conversion
         }
 
-        private static string EscapeCsvValue(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return string.Empty;
-            }
-
-            // Replace newlines and carriage returns with escaped sequences for better compatibility
-            var escapedValue = value.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
-
-            // If value contains comma or quote, wrap in quotes and escape internal quotes
-            if (escapedValue.Contains(",") || escapedValue.Contains("\""))
-            {
-                return "\"" + escapedValue.Replace("\"", "\"\"") + "\"";
-            }
-
-            return escapedValue;
-        }
 
         private string ShowOpenFileDialog(string filter, string title)
         {
