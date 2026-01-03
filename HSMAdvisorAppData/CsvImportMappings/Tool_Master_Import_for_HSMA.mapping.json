@@ -4,6 +4,42 @@
     "LibraryName": "Tool Master Import for HSMA",
     "Mappings": [
         {
+            "CsvColumn": "NSD Group Sort",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Sub Sort",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Tool Number",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Number",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "NSD Group",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
             "CsvColumn": "SPRUT Tool Type",
             "DefaultValue": null,
             "EnumType": "ToolTypes",
@@ -68,6 +104,42 @@
                     "Value": ""
                 }
             ]
+        },
+        {
+            "CsvColumn": "Org Description",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Comment",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Comments (Non center Cut Etc)",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Additional_info",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Holder Type",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "# Flutes",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Flute_N",
+            "ValueMap": []
         },
         {
             "CsvColumn": "Tool Material",
@@ -135,21 +207,12 @@
             "ValueMap": []
         },
         {
-            "CsvColumn": "Tool Number",
+            "CsvColumn": "Fract. D",
             "DefaultValue": null,
             "EnumType": null,
             "ExportExpression": "",
             "Expression": "",
-            "ToolField": "Number",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "# Flutes",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Flute_N",
+            "ToolField": null,
             "ValueMap": []
         },
         {
@@ -162,120 +225,21 @@
             "ValueMap": []
         },
         {
-            "CsvColumn": "(WL)  - Working Length",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Flute_Len",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "(SO) Stickout",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Stickout",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "(RC) Other Radius",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Corner_rad",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "(A) Angle",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Toolangle",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "(A) Angle",
-            "DefaultValue": "Taper",
-            "EnumType": "ToolAngleModes",
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Toolangle_mode",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "NSD Group Sort",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": null,
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "Sub Sort",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": null,
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "NSD Group",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": null,
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "Org Description",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Comment",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "Comments (Non center Cut Etc)",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Additional_info",
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "Holder Type",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": null,
-            "ValueMap": []
-        },
-        {
-            "CsvColumn": "Fract. D",
-            "DefaultValue": null,
-            "EnumType": null,
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": null,
-            "ValueMap": []
-        },
-        {
             "CsvColumn": "(D1) Other\/End Dia",
             "DefaultValue": null,
             "EnumType": null,
             "ExportExpression": "",
             "Expression": "",
             "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(WL)  - Working Length",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Flute_Len",
             "ValueMap": []
         },
         {
@@ -297,6 +261,15 @@
             "ValueMap": []
         },
         {
+            "CsvColumn": "(SO) Stickout",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Stickout",
+            "ValueMap": []
+        },
+        {
             "CsvColumn": "(H) Shape Height",
             "DefaultValue": null,
             "EnumType": null,
@@ -306,7 +279,34 @@
             "ValueMap": []
         },
         {
+            "CsvColumn": "(A) Angle",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Toolangle",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": null,
+            "DefaultValue": "Taper",
+            "EnumType": "ToolAngleModes",
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Toolangle_mode",
+            "ValueMap": []
+        },
+        {
             "CsvColumn": "(R) Tip Radius",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Corner_rad",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(RC) Other Radius",
             "DefaultValue": null,
             "EnumType": null,
             "ExportExpression": "",

@@ -23,7 +23,7 @@ namespace ImportCsvTools.Forms
         {
             InitializeComponent();
             InitializeData();
-            
+
             // Wire up DataError event for graceful error handling
             dataGridView.DataError += dataGridView_DataError;
         }
@@ -70,7 +70,7 @@ namespace ImportCsvTools.Forms
         {
             txtLibraryName.Text = _config.LibraryName ?? "CSV Import";
             chkAllowInvalidToolImport.Checked = _config.AllowInvalidToolImport;
-            
+
             // Load CSV Input Units setting
             if (string.Equals(_config.CsvInputUnits, "mm", StringComparison.OrdinalIgnoreCase))
             {
@@ -91,54 +91,73 @@ namespace ImportCsvTools.Forms
                 toolFieldColumn.DataSource = _toolProperties.ToList();
             }
 
-            // Load existing mappings
-            foreach (var mapping in _config.Mappings)
+            // Load mappings in the correct order
+            if (CsvColumns != null && CsvColumns.Count > 0)
             {
-                AddMappingToGrid(mapping);
-            }
+                // Track which mappings have been added
+                var addedMappings = new HashSet<int>();
 
-            // Populate missing CSV columns if provided
-            PopulateMissingCsvColumns();
+                // Add mappings in CSV column order
+                foreach (var columnInfo in CsvColumns)
+                {
+                    // Find all mappings for this CSV column (there may be multiple)
+                    for (int i = 0; i < _config.Mappings.Count; i++)
+                    {
+                        var mapping = _config.Mappings[i];
+                        if (string.Equals(mapping.CsvColumn, columnInfo.ColumnName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!addedMappings.Contains(i))
+                            {
+                                AddMappingToGrid(mapping);
+                                addedMappings.Add(i);
+                            }
+                        }
+                    }
+
+                    // If no existing mapping found for this CSV column, create a new one
+                    bool foundMapping = false;
+                    for (int i = 0; i < _config.Mappings.Count; i++)
+                    {
+                        var mapping = _config.Mappings[i];
+                        if (string.Equals(mapping.CsvColumn, columnInfo.ColumnName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            foundMapping = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundMapping)
+                    {
+                        var newMapping = new CsvMapping
+                        {
+                            CsvColumn = columnInfo.ColumnName,
+                            ValueMap = new Dictionary<string, string>()
+                        };
+                        AddMappingToGrid(newMapping);
+                    }
+                }
+
+                // Add any remaining mappings that don't correspond to CSV columns
+                for (int i = 0; i < _config.Mappings.Count; i++)
+                {
+                    if (!addedMappings.Contains(i))
+                    {
+                        AddMappingToGrid(_config.Mappings[i]);
+                    }
+                }
+            }
+            else
+            {
+                // No CSV columns provided - just load existing mappings as-is
+                foreach (var mapping in _config.Mappings)
+                {
+                    AddMappingToGrid(mapping);
+                }
+            }
 
             UpdateRequiredFieldsLabel();
         }
 
-        private void PopulateMissingCsvColumns()
-        {
-            // If no CSV columns provided, nothing to do
-            if (CsvColumns == null || CsvColumns.Count == 0)
-            {
-                return;
-            }
-
-            // Get list of already mapped CSV columns
-            var mappedColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (DataGridViewRow row in dataGridView.Rows)
-            {
-                if (row.IsNewRow)
-                    continue;
-
-                var csvColumn = row.Cells["colCsvColumn"].Value?.ToString()?.Trim();
-                if (!string.IsNullOrWhiteSpace(csvColumn))
-                {
-                    mappedColumns.Add(csvColumn);
-                }
-            }
-
-            // Add missing CSV columns
-            foreach (var columnInfo in CsvColumns)
-            {
-                if (!mappedColumns.Contains(columnInfo.ColumnName))
-                {
-                    var newMapping = new CsvMapping
-                    {
-                        CsvColumn = columnInfo.ColumnName,
-                        ValueMap = new Dictionary<string, string>()
-                    };
-                    AddMappingToGrid(newMapping);
-                }
-            }
-        }
 
         private void AddMappingToGrid(CsvMapping mapping)
         {
@@ -212,19 +231,19 @@ namespace ImportCsvTools.Forms
                 using (var editor = new ExpressionEditorForm())
                 {
                     editor.Expression = expression;
-                    
+
                     // Find and pass the CSV column info with unique values
                     if (!string.IsNullOrWhiteSpace(csvColumnName) && CsvColumns != null)
                     {
-                        var columnInfo = CsvColumns.FirstOrDefault(c => 
+                        var columnInfo = CsvColumns.FirstOrDefault(c =>
                             string.Equals(c.ColumnName, csvColumnName, StringComparison.OrdinalIgnoreCase));
-                        
+
                         if (columnInfo != null)
                         {
                             editor.CsvColumnInfo = columnInfo;
                         }
                     }
-                    
+
                     if (editor.ShowDialog() == DialogResult.OK)
                     {
                         SetExpression(row, editor.Expression);
@@ -243,10 +262,10 @@ namespace ImportCsvTools.Forms
                 {
                     editor.Expression = exportExpression;
                     editor.Text = "Edit Export Expression";
-                    
+
                     // Note: For export expressions, we don't pass CSV column info
                     // because the expression operates on Tool field values, not CSV values
-                    
+
                     if (editor.ShowDialog() == DialogResult.OK)
                     {
                         SetExportExpression(row, editor.Expression);
@@ -268,13 +287,13 @@ namespace ImportCsvTools.Forms
                     // Pass the EnumType so the editor can show enum values if available
                     editor.EnumTypeName = enumType;
                     editor.ValueMap = new Dictionary<string, string>(valueMap);
-                    
+
                     // Find and pass the CSV column info with unique values
                     if (!string.IsNullOrWhiteSpace(csvColumnName) && CsvColumns != null)
                     {
-                        var columnInfo = CsvColumns.FirstOrDefault(c => 
+                        var columnInfo = CsvColumns.FirstOrDefault(c =>
                             string.Equals(c.ColumnName, csvColumnName, StringComparison.OrdinalIgnoreCase));
-                        
+
                         /*if (!String.IsNullOrEmpty(cellExpression) && columnInfo.UniqueValues != null && columnInfo.UniqueValues.Count > 0)
                         {
                             // Create a copy of columnInfo
@@ -294,12 +313,12 @@ namespace ImportCsvTools.Forms
                             editor.CsvColumnInfo = columnInfo;
                         }
                     }
-                    
+
                     if (editor.ShowDialog() == DialogResult.OK)
                     {
                         row.Tag = editor.ValueMap;
-                        row.Cells["colValueMapButton"].Value = editor.ValueMap.Count > 0 
-                            ? $"{editor.ValueMap.Count} item(s)" 
+                        row.Cells["colValueMapButton"].Value = editor.ValueMap.Count > 0
+                            ? $"{editor.ValueMap.Count} item(s)"
                             : string.Empty;
 
                         if (editor.ValueMap.Count > 0)
@@ -383,7 +402,7 @@ namespace ImportCsvTools.Forms
         {
             // Store full expression in cell's tag
             row.Cells["colExpression"].Tag = expression;
-            
+
             // Display truncated version in the button
             if (string.IsNullOrWhiteSpace(expression))
             {
@@ -415,7 +434,7 @@ namespace ImportCsvTools.Forms
         {
             // Store full export expression in cell's tag
             row.Cells["colExportExpression"].Tag = exportExpression;
-            
+
             // Display truncated version in the button
             if (string.IsNullOrWhiteSpace(exportExpression))
             {
@@ -540,11 +559,11 @@ namespace ImportCsvTools.Forms
                 // Cleanup expressions from "Edit..."
                 foreach (var map in _config.Mappings)
                 {
-                    if (map.Expression=="Edit...")
+                    if (map.Expression == "Edit...")
                     {
                         map.Expression = null;
                     }
-                    if (map.ExportExpression=="Edit...")
+                    if (map.ExportExpression == "Edit...")
                     {
                         map.ExportExpression = null;
                     }
@@ -624,7 +643,7 @@ namespace ImportCsvTools.Forms
                     "Data Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                
+
                 e.ThrowException = false;
             }
         }
