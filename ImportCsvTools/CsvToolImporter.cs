@@ -204,6 +204,24 @@ namespace ImportCsvTools
                     totalToolsCount++;
                     var tool = new Tool(true);
 
+                    // Build dictionary of all CSV columns for storage in Aux_data
+                    var csvColumns = new Dictionary<string, string>();
+                    foreach (var kvp in headerIndex)
+                    {
+                        var columnName = kvp.Key;
+                        var columnIndex = kvp.Value;
+                        if (columnIndex >= 0 && columnIndex < fields.Length)
+                        {
+                            var value = fields[columnIndex]?.Trim() ?? string.Empty;
+                            // Unescape newline sequences
+                            if (!string.IsNullOrEmpty(value))
+                            {
+                                value = CsvFileHandler.UnescapeCsvValue(value);
+                            }
+                            csvColumns[columnName] = value;
+                        }
+                    }
+
                     foreach (var map in mapping.Mappings)
                     {
                         var rawValue = GetCsvValue(map, fields, headerIndex);
@@ -223,7 +241,10 @@ namespace ImportCsvTools
                         }
                     }
 
-                    // Set metric flags if needed
+                    // Store complete CSV row data in Aux_data for round-trip fidelity
+                    tool.Aux_data = CsvAuxData.Serialize(csvColumns);
+
+                    // Set metric flags if needed (must be done after Aux_data is set)
                     if (tool._Input_units_m != null && Parse.ToBoolean(tool._Input_units_m))
                     {
                         // If Input_units_m is true, set metric flags
@@ -511,13 +532,30 @@ namespace ImportCsvTools
 
             var mapping = CsvMappingConfig.Load(mappingFileName);
 
-            // Build headers
-            var headers = new List<string>();
+            // Discover all columns from first tool's Aux_data (if available)
+            var allColumnsOrdered = new List<string>();
+            var mappedColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // First, collect all mapped columns from mapping config
             foreach (var map in mapping.Mappings)
             {
                 if (!string.IsNullOrWhiteSpace(map.CsvColumn))
                 {
-                    headers.Add(map.CsvColumn);
+                    allColumnsOrdered.Add(map.CsvColumn);
+                    mappedColumns.Add(map.CsvColumn);
+                }
+            }
+
+            // Try to get original column order from first tool's Aux_data
+            if (database.Tools.Count > 0)
+            {
+                var firstToolCsvData = CsvAuxData.Deserialize(database.Tools[0].Aux_data);
+                if (firstToolCsvData != null)
+                {
+                    // Rebuild column list using original order from CSV
+                    var originalColumns = new List<string>(firstToolCsvData.Keys);
+                    allColumnsOrdered.Clear();
+                    allColumnsOrdered.AddRange(originalColumns);
                 }
             }
 
@@ -526,16 +564,42 @@ namespace ImportCsvTools
             foreach (var tool in database.Tools)
             {
                 var values = new List<string>();
-                foreach (var map in mapping.Mappings)
+                var toolCsvData = CsvAuxData.Deserialize(tool.Aux_data);
+
+                foreach (var columnName in allColumnsOrdered)
                 {
-                    var value = GetExportValue(tool, map, mapping.CsvInputUnits);
+                    string value = string.Empty;
+
+                    // Priority 1: If we have original CSV data in Aux_data, use it for perfect round-trip fidelity
+                    // Priority 2: If column is mapped, get current value from Tool property
+                    // Priority 3: Empty string
+
+                    if (toolCsvData != null && toolCsvData.TryGetValue(columnName, out var auxValue))
+                    {
+                        // Use original CSV value for round-trip fidelity
+                        value = auxValue ?? string.Empty;
+                    }
+                    else
+                    {
+                        // No original CSV data - check if this column is mapped to a Tool field
+                        var mappingForColumn = mapping.Mappings.Find(m =>
+                            string.Equals(m.CsvColumn, columnName, StringComparison.OrdinalIgnoreCase));
+
+                        if (mappingForColumn != null && !string.IsNullOrWhiteSpace(mappingForColumn.ToolField))
+                        {
+                            // This is a mapped column - get value from Tool property
+                            value = GetExportValue(tool, mappingForColumn, mapping.CsvInputUnits);
+                        }
+                    }
+
                     values.Add(value);
                 }
+
                 rows.Add(values);
             }
 
             // Write to CSV using CsvFileHandler
-            CsvFileHandler.WriteCsvFile(csvFileName, headers, rows);
+            CsvFileHandler.WriteCsvFile(csvFileName, allColumnsOrdered, rows);
         }
 
         private static string GetExportValue(Tool tool, CsvMapping map, string csvUnits)

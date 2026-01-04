@@ -66,6 +66,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvAuxData.cs" />
     <Compile Include="CsvFileHandler.cs" />
     <Compile Include="CsvImportColumnInfo.cs" />
     <Compile Include="CsvMapping.cs" />
