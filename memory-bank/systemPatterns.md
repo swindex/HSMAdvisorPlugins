@@ -72,7 +72,22 @@ The plugin acts as an adapter between HSMWorks XML format and HSMAdvisor's inter
   - Material mapping
   - File dialog management
 
-#### 2. Schema Classes
+#### 2. ImportCsvTools Plugin
+- **Primary Class**: `CsvToolImporter : ToolsPluginInterface`
+- **Responsibilities**:
+  - CSV parsing and import
+  - JSON-based mapping configuration
+  - Expression evaluation for calculated values
+  - Value translation (ValueMap)
+  - Visual mapping editor
+- **Key Components**:
+  - `CsvToolImporter`: Main import engine
+  - `CsvMapping`: Configuration classes
+  - `ExpressionEvaluator`: Dynamic value calculation
+  - `ReflectionHelpers`: Tool field introspection
+  - Visual Forms: Mapping editor UI
+
+#### 3. Schema Classes (ExchangeHSMWorks)
 - **Generated from XSD**: Auto-generated classes for HSMWorks XML schema
 - **Key Classes**:
   - `toollibrary`: Root container
@@ -81,7 +96,7 @@ The plugin acts as an adapter between HSMWorks XML format and HSMAdvisor's inter
   - `toollibraryToolMaterial`: Material properties
   - `toollibraryToolHolder`: Holder information
 
-#### 3. Plugin Test Runner
+#### 4. Plugin Test Runner
 - **Purpose**: Development and testing tool
 - **Architecture**: Windows Forms application
 - **Key Features**:
@@ -203,6 +218,102 @@ public string GetReadFileFilter()
 }
 ```
 
+## ImportCsvTools Architecture Patterns
+
+### Configuration-Driven Mapping Pattern
+The CSV import uses a flexible JSON configuration that defines mappings without code changes:
+
+```json
+{
+  "LibraryName": "My Tools",
+  "CsvInputUnits": "in",
+  "Mappings": [
+    {
+      "CsvColumn": "Tool Type",
+      "ToolField": "Tool_type_id",
+      "EnumType": "ToolTypes",
+      "ValueMap": {"End Mill": "SolidEndMill"}
+    }
+  ]
+}
+```
+
+### Expression Evaluation Pattern
+Dynamic expression evaluation for calculated values:
+```csharp
+public class ExpressionEvaluator
+{
+    public object Evaluate(string expression, Dictionary<string, object> variables)
+    {
+        // Compiles and evaluates C# expressions at runtime
+        // Supports: math operations, string manipulation, conditionals
+    }
+}
+```
+
+Example usage:
+```json
+{
+  "CsvColumn": "Diameter_MM",
+  "ToolField": "Diameter",
+  "Expression": "value * 0.03937"  // Convert mm to inches
+}
+```
+
+### Value Translation Pattern
+ValueMap translates external values to HSMAdvisor enums:
+```json
+{
+  "ValueMap": {
+    "HSS Steel": "HSS",
+    "Cobalt": "HSCobalt",
+    "Carb": "Carbide"
+  }
+}
+```
+
+### Reflection-Based Mapping Pattern
+Uses reflection to dynamically set Tool properties:
+```csharp
+public static class ReflectionHelpers
+{
+    public static void SetToolField(Tool tool, string fieldName, object value)
+    {
+        var field = typeof(Tool).GetField(fieldName);
+        field?.SetValue(tool, ConvertValue(value, field.FieldType));
+    }
+}
+```
+
+### Visual Editor Pattern
+Windows Forms-based mapping editor with:
+- **Column Discovery**: Reads CSV headers automatically
+- **Field Dropdown**: Shows available Tool fields
+- **Enum Selection**: Built-in enum value picker
+- **Value Map Editor**: GUI for translation rules
+- **Expression Editor**: Syntax-highlighted expression editing
+- **Real-time Validation**: Checks mappings before save
+
+## Solution Structure
+
+### Multi-Project Organization
+```
+HSMAdvisorPlugins Solution
+├── ExchangeHSMWorks/              # HSMWorks plugin + tests
+│   └── ExchangeHSMWorks.Tests/
+├── ImportCsvTools/                # CSV plugin + tests
+│   └── ImportCsvTools.Tests/
+├── Plugin-Test-Runner-UI/         # Shared testing tool
+└── HSMadvisorDlls/               # Shared references
+```
+
+### Shared Testing Infrastructure
+Both plugins use the same testing patterns:
+- **Unit Test Projects**: NUnit-based test suites
+- **Test Data Directories**: Sample files for validation
+- **Plugin Test Runner**: Shared UI testing tool
+- **Integration Tests**: Test with real data files
+
 ## Testing Patterns
 
 ### Plugin Testing Architecture
@@ -211,5 +322,27 @@ The Plugin Test Runner follows these patterns:
 - **Interface Validation**: Ensures plugins implement required interfaces
 - **Method Invocation**: Dynamically calls plugin methods based on capabilities
 - **Result Inspection**: Uses PropertyGrid for detailed result examination
+
+### Unit Testing Pattern (ImportCsvTools)
+```csharp
+[TestMethod]
+public void TestCsvImport()
+{
+    var importer = new CsvToolImporter();
+    var mapping = LoadMapping("Tool_Master_Import_for_HSMA.mapping.json");
+    var csv = File.ReadAllText("Tool Master Import for HSMA.csv");
+    
+    var result = importer.Import(csv, mapping);
+    
+    Assert.IsNotNull(result);
+    Assert.IsTrue(result.Tools.Count > 0);
+    // Validate required fields
+    foreach (var tool in result.Tools)
+    {
+        Assert.IsNotNull(tool.Tool_type_id);
+        Assert.IsTrue(tool.Diameter > 0);
+    }
+}
+```
 
 This architecture enables rapid plugin development and testing without requiring full HSMAdvisor integration.

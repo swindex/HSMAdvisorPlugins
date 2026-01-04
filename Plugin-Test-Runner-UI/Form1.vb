@@ -8,7 +8,7 @@ Public Class Form1
     Private _plugins As List(Of HSMAdvisorPluginInterface)
     Public Property Plugins() As List(Of HSMAdvisorPluginInterface)
         Get
-            Return _Plugins
+            Return _plugins
         End Get
         Set(ByVal value As List(Of HSMAdvisorPluginInterface))
             _plugins = value
@@ -28,7 +28,8 @@ Public Class Form1
         Set(ByVal value As String)
             _pluginPath = value
             txt_pluginPath.Text = value
-            Me.Plugins = HSMAdvisorPlugin.PluginsReader.ReadPlugins(txt_pluginPath.Text)
+            Dim domain = AppDomain.CurrentDomain
+            Me.Plugins = HSMAdvisorPlugin.PluginsReader.ReadPlugins(txt_pluginPath.Text, domain)
         End Set
     End Property
 
@@ -93,12 +94,12 @@ Public Class Form1
 
                 Select Case cap.CapabilityMethod
                     Case HSMAdvisorDatabase.ToolsPluginCapabilityMethod.ImportTools
-                        MessageBox.Show("Calling ImportTools")
+                        'MessageBox.Show("Calling ImportTools")
                         currDataBase = tPlugin.ImportTools()
                         PGrid.SelectedObject = currDataBase
 
                     Case HSMAdvisorDatabase.ToolsPluginCapabilityMethod.ExportTools
-                        MessageBox.Show("Calling ExportTools with current database")
+                        'MessageBox.Show("Calling ExportTools with current database")
                         tPlugin.ExportTools(currDataBase)
                     Case HSMAdvisorDatabase.ToolsPluginCapabilityMethod.ModifyTools
                         MessageBox.Show("Calling ModifyTools")

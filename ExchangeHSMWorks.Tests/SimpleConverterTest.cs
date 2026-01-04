@@ -6,6 +6,7 @@ using System.Text;
 using HSMAdvisorDatabase.ToolDataBase;
 using HSMAdvisorDatabase;
 using ExchangeHSMWorks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ExchangeHSMWorks.Tests
 {
@@ -13,6 +14,7 @@ namespace ExchangeHSMWorks.Tests
     /// Simple test class that can be run without MSTest framework
     /// Demonstrates the plugin import functionality with all test data files
     /// </summary>
+    [TestClass]
     public class SimpleConverterTest
     {
         private const string TestDataDirectory = @"ExchangeHSMWorks.Tests\test-data";
@@ -69,6 +71,7 @@ namespace ExchangeHSMWorks.Tests
             Console.ReadKey();
         }
 
+        [TestMethod]
         public void RunAllTests()
         {
             // Load all test data files first
@@ -190,7 +193,8 @@ namespace ExchangeHSMWorks.Tests
             };
         }
 
-        private void TestFilesExist()
+        [TestMethod]
+        public void TestFilesExist()
         {
             Console.Write("Testing files exist... ");
 
@@ -208,7 +212,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({_testDataCache.Count} files)");
         }
 
-        private void TestImportToolCount()
+        [TestMethod]
+        public void TestImportToolCount()
         {
             Console.Write("Testing import tool count... ");
 
@@ -230,7 +235,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({totalTools} total tools across {_testDataCache.Count} files)");
         }
 
-        private void TestToolCountConsistency()
+        [TestMethod]
+        public void TestToolCountConsistency()
         {
             Console.Write("Testing tool count consistency... ");
 
@@ -263,7 +269,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS (Original: {totalOriginal}, Imported: {totalImported} across {_testDataCache.Count} files)");
         }
 
-        private void TestLibraryCreation()
+        [TestMethod]
+        public void TestLibraryCreation()
         {
             Console.Write("Testing library creation... ");
 
@@ -284,7 +291,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestToolDataPreservation()
+        [TestMethod]
+        public void TestToolDataPreservation()
         {
             Console.Write("Testing tool data preservation... ");
 
@@ -300,13 +308,13 @@ namespace ExchangeHSMWorks.Tests
                     throw new Exception($"Some tools are missing GUIDs in {testData.FileName}");
                 }
 
-                var toolsWithEmptyNameID = testData.Database.Tools.Where(t => t.Name_id == 0).ToList();
+                var toolsWithEmptyNameID = testData.Database.Tools.Where(t => t.Tool_type_id == 0).ToList();
                 if (toolsWithEmptyNameID.Any())
                 {
                     var firstTool = toolsWithEmptyNameID.First();
                     var originalTool = testData.OriginalData.tool.FirstOrDefault(t => t.productid == firstTool.Series_name);
-                    ShowToolComparison("Name_id Missing", originalTool, firstTool, testData.FileName);
-                    throw new Exception($"Some tools have invalid Name_id in {testData.FileName}");
+                    ShowToolComparison("Tool_type_id Missing", originalTool, firstTool, testData.FileName);
+                    throw new Exception($"Some tools have invalid Tool_type_id in {testData.FileName}");
                 }
 
                 // Check for invalid diameters
@@ -336,7 +344,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestToolTypeMapping()
+        [TestMethod]
+        public void TestToolTypeMapping()
         {
             Console.Write("Testing tool type mapping... ");
 
@@ -346,7 +355,7 @@ namespace ExchangeHSMWorks.Tests
 
             foreach (var testData in _testDataCache.Values)
             {
-                var toolTypes = testData.Database.Tools.Select(t => (Enums.ToolTypes)t.Name_id).Distinct().ToList();
+                var toolTypes = testData.Database.Tools.Select(t => (Enums.ToolTypes)t.Tool_type_id).Distinct().ToList();
 
                 if (!toolTypes.Any())
                     throw new Exception($"No tool types found in {testData.FileName}");
@@ -356,10 +365,10 @@ namespace ExchangeHSMWorks.Tests
                     allToolTypes.Add(toolType);
                 }
 
-                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidEndMill))
+                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Tool_type_id == Enums.ToolTypes.SolidEndMill))
                     hasEndMills = true;
 
-                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Name_id == Enums.ToolTypes.SolidBallMill))
+                if (testData.Database.Tools.Any(t => (Enums.ToolTypes)t.Tool_type_id == Enums.ToolTypes.SolidBallMill))
                     hasBallMills = true;
             }
 
@@ -372,7 +381,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({allToolTypes.Count} different tool types across all files)");
         }
 
-        private void TestMaterialMapping()
+        [TestMethod]
+        public void TestMaterialMapping()
         {
             Console.Write("Testing material mapping... ");
 
@@ -401,7 +411,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({allMaterials.Count} different materials across all files)");
         }
 
-        private void TestUnitHandling()
+        [TestMethod]
+        public void TestUnitHandling()
         {
             Console.Write("Testing unit handling... ");
 
@@ -434,7 +445,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine($"PASS ({totalMetricTools} metric, {totalImperialTools} imperial tools across all files)");
         }
 
-        private void TestToolGeometry()
+        [TestMethod]
+        public void TestToolGeometry()
         {
             Console.Write("Testing tool geometry... ");
 
@@ -456,7 +468,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestManufacturerData()
+        [TestMethod]
+        public void TestManufacturerData()
         {
             Console.Write("Testing manufacturer data... ");
 
@@ -475,7 +488,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestRoundTripData()
+        [TestMethod]
+        public void TestRoundTripData()
         {
             Console.Write("Testing round-trip data... ");
 
@@ -503,7 +517,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestMaterialConversion()
+        [TestMethod]
+        public void TestMaterialConversion()
         {
             Console.Write("Testing material conversion... ");
 
@@ -539,7 +554,8 @@ namespace ExchangeHSMWorks.Tests
             Console.WriteLine("PASS");
         }
 
-        private void TestCapabilities()
+        [TestMethod]
+        public void TestCapabilities()
         {
             Console.Write("Testing capabilities... ");
             var converter = new Converter();
@@ -725,12 +741,12 @@ namespace ExchangeHSMWorks.Tests
 
             try
             {
-                var toolType = (Enums.ToolTypes)tool.Name_id;
+                var toolType = (Enums.ToolTypes)tool.Tool_type_id;
                 return toolType.ToString();
             }
             catch
             {
-                return $"Unknown ({tool.Name_id})";
+                return $"Unknown ({tool.Tool_type_id})";
             }
         }
 

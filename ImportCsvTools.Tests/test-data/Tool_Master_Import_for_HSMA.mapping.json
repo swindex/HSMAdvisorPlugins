@@ -1,0 +1,318 @@
+{
+    "AllowInvalidToolImport": true,
+    "CsvInputUnits": "in",
+    "LibraryName": "Tool Master Import for HSMA",
+    "Mappings": [
+        {
+            "CsvColumn": "NSD Group Sort",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Sub Sort",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Tool Number",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Number",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "NSD Group",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "SPRUT Tool Type",
+            "DefaultValue": null,
+            "EnumType": "ToolTypes",
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Tool_type_id",
+            "ValueMap": [
+                {
+                    "Key": "Cylindrical Mill",
+                    "Value": "SolidEndMill"
+                },
+                {
+                    "Key": "Spherical Mill",
+                    "Value": "SolidBallMill"
+                },
+                {
+                    "Key": "Torus Mill",
+                    "Value": "SolidEndMill"
+                },
+                {
+                    "Key": "Negative Radius Mill",
+                    "Value": "SolidEndMill"
+                },
+                {
+                    "Key": "Conical Mill",
+                    "Value": "SolidEndMill"
+                },
+                {
+                    "Key": "Limited Conical Mill",
+                    "Value": "SolidEndMill"
+                },
+                {
+                    "Key": "Engraver",
+                    "Value": "VbitEngraver"
+                },
+                {
+                    "Key": "Counter Sink Drill",
+                    "Value": "CounterSink"
+                },
+                {
+                    "Key": "Flat Tip Countersink",
+                    "Value": "CounterSink"
+                },
+                {
+                    "Key": "Drill",
+                    "Value": "JobberTwistDrill"
+                },
+                {
+                    "Key": "Two Stage Drill",
+                    "Value": "JobberTwistDrill"
+                },
+                {
+                    "Key": "Spot Drill",
+                    "Value": "SpotDrill"
+                },
+                {
+                    "Key": "Reamer",
+                    "Value": "Reamer"
+                },
+                {
+                    "Key": "N\/A",
+                    "Value": ""
+                }
+            ]
+        },
+        {
+            "CsvColumn": "Org Description",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Comment",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Comments (Non center Cut Etc)",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Additional_info",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Holder Type",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "# Flutes",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Flute_N",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Tool Material",
+            "DefaultValue": "Carbide",
+            "EnumType": "ToolMaterials",
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Tool_material_id",
+            "ValueMap": [
+                {
+                    "Key": "HSS",
+                    "Value": "HSS"
+                },
+                {
+                    "Key": "Cobalt",
+                    "Value": "HSCobalt"
+                },
+                {
+                    "Key": "Carbide",
+                    "Value": "Carbide"
+                },
+                {
+                    "Key": "Diamond",
+                    "Value": "PCD"
+                }
+            ]
+        },
+        {
+            "CsvColumn": "Coating",
+            "DefaultValue": "None",
+            "EnumType": "ToolCoatings",
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Coating_id",
+            "ValueMap": [
+                {
+                    "Key": "Uncoated",
+                    "Value": "None"
+                },
+                {
+                    "Key": "TiN",
+                    "Value": "TiN"
+                },
+                {
+                    "Key": "TiAlN",
+                    "Value": "TiAlN"
+                },
+                {
+                    "Key": "AlTiN",
+                    "Value": "AlTiN"
+                },
+                {
+                    "Key": "ZrN",
+                    "Value": "ZrN"
+                }
+            ]
+        },
+        {
+            "CsvColumn": "(D) - Cutting Dia",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Diameter",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Fract. D",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(DS) Shank Dia",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Shank_Dia",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(D1) Other\/End Dia",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(WL)  - Working Length",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Flute_Len",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Fract. WL",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "Tool OAL",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(SO) Stickout",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Stickout",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(H) Shape Height",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": null,
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(A) Angle",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Toolangle",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": null,
+            "DefaultValue": "Taper",
+            "EnumType": "ToolAngleModes",
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Toolangle_mode",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(R) Tip Radius",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Corner_rad",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": "(RC) Other Radius",
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Corner_rad",
+            "ValueMap": []
+        }
+    ]
+}

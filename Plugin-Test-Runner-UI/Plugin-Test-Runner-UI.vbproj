@@ -144,6 +144,13 @@
       <Project>{3332d92c-6f53-4625-9597-ef4efa7756ca}</Project>
       <Name>ExchangeHSMWorks</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ImportCsvTools\ImportCsvTools.csproj">
+      <Project>{3e7be11a-4e81-4c00-8e3f-1b45a0a5f1f4}</Project>
+      <Name>ImportCsvTools</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

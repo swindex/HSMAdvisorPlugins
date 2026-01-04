@@ -1,0 +1,42 @@
+{
+  "LibraryName": "CSV Import",
+  "Mappings": [
+    {
+      "CsvColumn": "Tool Type",
+      "ToolField": "Name_id",
+      "EnumType": "ToolTypes",
+      "DefaultValue": "SolidEndMill",
+      "ValueMap": {
+        "End Mill": "SolidEndMill",
+        "Drill": "JobberTwistDrill",
+        "cobalt": "HSCobalt"
+      }
+    },
+    {
+      "CsvColumn": "Tool Material",
+      "ToolField": "Tool_material_id",
+      "EnumType": "ToolMaterials",
+      "ValueMap": {
+        "carb": "Carbide",
+        "hss": "HSS",
+        "cobalt": "HSCobalt"
+      }
+    },
+    {
+      "CsvColumn": "Tool Type",
+      "ToolField": "Coating_id"
+    },
+    {
+      "CsvColumn": "Tool Name",
+      "ToolField": "Comment"
+    },
+    {
+      "CsvColumn": "Tool Number",
+      "ToolField": "Number"
+    },
+    {
+      "CsvColumn": "Diameter",
+      "ToolField": "Diameter"
+    }
+  ]
+}
