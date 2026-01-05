@@ -85,7 +85,7 @@ A mapping configuration is a JSON file that defines how CSV columns map to HSMAd
     {
       "CsvColumn": "Tool Diameter",
       "ToolField": "Diameter",
-      "ValueMap": {},
+      "ValueMap": [],
       "DefaultValue": "",
       "EnumType": "",
       "Expression": ""
@@ -111,7 +111,7 @@ Each mapping in the `Mappings` array defines how one CSV column maps to a tool f
 |----------|------|----------|-------------|
 | **CsvColumn** | string | Yes | Name of the CSV column header |
 | **ToolField** | string | Yes | Name of the HSMAdvisor Tool field (see [Tool Field Reference](../TOOL_FIELD_REFERENCE.md)) |
-| **ValueMap** | object | No | Dictionary for translating CSV values to HSMAdvisor values |
+| **ValueMap** | array | No | Array of key-value pairs for translating CSV values to HSMAdvisor values and back |
 | **DefaultValue** | string | No | Fallback value if CSV column is missing or empty |
 | **EnumType** | string | No | Enum type name for validation (e.g., "ToolTypes", "ToolMaterials") |
 | **Expression** | string | No | C# expression for calculated values |
@@ -170,12 +170,12 @@ Map CSV values to HSMAdvisor enums:
   "CsvColumn": "Material",
   "ToolField": "Tool_material_id",
   "EnumType": "ToolMaterials",
-  "ValueMap": {
-    "HSS Steel": "HSS",
-    "Cobalt": "HSCobalt",
-    "Carb": "Carbide",
-    "Solid Carbide": "Carbide"
-  }
+  "ValueMap": [
+    {"Key": "HSS Steel", "Value": "HSS"},
+    {"Key": "Cobalt", "Value": "HSCobalt"},
+    {"Key": "Carb", "Value": "Carbide"},
+    {"Key": "Solid Carbide", "Value": "Carbide"}
+  ]
 }
 ```
 
@@ -186,12 +186,12 @@ Map CSV values to HSMAdvisor enums:
   "CsvColumn": "Tool Type",
   "ToolField": "Tool_type_id",
   "EnumType": "ToolTypes",
-  "ValueMap": {
-    "End Mill": "SolidEndMill",
-    "Ball End Mill": "SolidBallMill",
-    "Twist Drill": "JobberTwistDrill",
-    "Center Drill": "SpotDrill"
-  }
+  "ValueMap": [
+    {"Key": "End Mill", "Value": "SolidEndMill"},
+    {"Key": "Ball End Mill", "Value": "SolidBallMill"},
+    {"Key": "Twist Drill", "Value": "JobberTwistDrill"},
+    {"Key": "Center Drill", "Value": "SpotDrill"}
+  ]
 }
 ```
 
@@ -269,20 +269,20 @@ Drill,HSS Steel,TiN,0.125,2,1.5,3.0,0.125
       "CsvColumn": "Tool Type",
       "ToolField": "Tool_type_id",
       "EnumType": "ToolTypes",
-      "ValueMap": {
-        "End Mill": "SolidEndMill",
-        "Ball End Mill": "SolidBallMill",
-        "Drill": "JobberTwistDrill"
-      }
+      "ValueMap": [
+        {"Key": "End Mill", "Value": "SolidEndMill"},
+        {"Key": "Ball End Mill", "Value": "SolidBallMill"},
+        {"Key": "Drill", "Value": "JobberTwistDrill"}
+      ]
     },
     {
       "CsvColumn": "Material",
       "ToolField": "Tool_material_id",
       "EnumType": "ToolMaterials",
-      "ValueMap": {
-        "HSS Steel": "HSS",
-        "Carbide": "Carbide"
-      }
+      "ValueMap": [
+        {"Key": "HSS Steel", "Value": "HSS"},
+        {"Key": "Carbide", "Value": "Carbide"}
+      ]
     },
     {
       "CsvColumn": "Coating",
@@ -356,7 +356,7 @@ Use expressions to assign tools to different libraries based on CSV data:
 {
   "CsvColumn": "Vendor",
   "ToolField": "Library",
-  "Expression": "\"Tools - \" + value"
+  "Expression": "\"Tools - \" + \"value\""
 }
 ```
 
@@ -368,14 +368,14 @@ CSV boolean values can be handled flexibly:
 {
   "CsvColumn": "HSM Capable",
   "ToolField": "Hsm",
-  "ValueMap": {
-    "Yes": "true",
-    "Y": "true",
-    "1": "true",
-    "No": "false",
-    "N": "false",
-    "0": "false"
-  }
+  "ValueMap": [
+    {"Key": "Yes", "Value": "true"},
+    {"Key": "Y", "Value": "true"},
+    {"Key": "1", "Value": "true"},
+    {"Key": "No", "Value": "false"},
+    {"Key": "N", "Value": "false"},
+    {"Key": "0", "Value": "false"}
+  ]
 }
 ```
 
