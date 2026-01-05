@@ -55,7 +55,8 @@ namespace ImportCsvTools.Tests
 
             // Import source CSV
             Console.WriteLine("Importing source CSV...");
-            var database = CsvToolImporter.ImportFromFiles(sourceCsvPath, mappingPath, MessageFlags.None);
+            var mappingConfig = CsvMappingConfig.Load(mappingPath);
+            var database = CsvToolImporter.ImportFromFiles(sourceCsvPath, mappingConfig, MessageFlags.None);
             if (database == null || database.Tools.Count == 0)
             {
                 throw new Exception("Failed to import tools from source CSV");
@@ -70,7 +71,7 @@ namespace ImportCsvTools.Tests
 
             // Export to CSV
             Console.WriteLine("Exporting to CSV...");
-            CsvToolImporter.ExportToFile(database, exportedCsvPath, mappingPath);
+            CsvToolImporter.ExportToFile(database, exportedCsvPath, mappingConfig);
             Console.WriteLine($"  Exported to: {exportedCsvPath}");
 
             Console.WriteLine("=== Setup Complete ===\n");

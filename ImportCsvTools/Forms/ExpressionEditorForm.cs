@@ -148,7 +148,7 @@ namespace ImportCsvTools.Forms
         {
             try
             {
-                var result = ExpressionEvaluator.EvaluateExpression(expression, value, true);
+                var result = ExpressionEvaluator.EvaluateExpression(expression, value, null, true);
                 return result?.ToString() ?? string.Empty;
             }
             catch (Exception ex)

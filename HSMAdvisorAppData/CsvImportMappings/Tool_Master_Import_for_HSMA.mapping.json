@@ -288,15 +288,6 @@
             "ValueMap": []
         },
         {
-            "CsvColumn": null,
-            "DefaultValue": "Taper",
-            "EnumType": "ToolAngleModes",
-            "ExportExpression": "",
-            "Expression": "",
-            "ToolField": "Toolangle_mode",
-            "ValueMap": []
-        },
-        {
             "CsvColumn": "(R) Tip Radius",
             "DefaultValue": null,
             "EnumType": null,
@@ -312,6 +303,24 @@
             "ExportExpression": "",
             "Expression": "",
             "ToolField": "Corner_rad",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": null,
+            "DefaultValue": "Taper",
+            "EnumType": "ToolAngleModes",
+            "ExportExpression": "",
+            "Expression": "",
+            "ToolField": "Toolangle_mode",
+            "ValueMap": []
+        },
+        {
+            "CsvColumn": null,
+            "DefaultValue": null,
+            "EnumType": null,
+            "ExportExpression": "",
+            "Expression": "v LIKE '%mm'",
+            "ToolField": "Diameter_m",
             "ValueMap": []
         }
     ]

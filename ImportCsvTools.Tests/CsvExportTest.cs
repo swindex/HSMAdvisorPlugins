@@ -50,7 +50,8 @@ namespace ImportCsvTools.Tests
             exportedFilePath = Path.Combine(outputDir, "test_export.csv");
 
             // Import original CSV once
-            originalDatabase = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
+            var mappingConfig = CsvMappingConfig.Load(mappingPath);
+            originalDatabase = CsvToolImporter.ImportFromFiles(csvPath, mappingConfig, MessageFlags.None);
             if (originalDatabase == null || originalDatabase.Tools.Count == 0)
             {
                 throw new Exception("Failed to import original tools");
@@ -65,12 +66,12 @@ namespace ImportCsvTools.Tests
 
             // Export once
             Console.WriteLine("Exporting to CSV once...");
-            CsvToolImporter.ExportToFile(originalDatabase, exportedFilePath, mappingPath);
+            CsvToolImporter.ExportToFile(originalDatabase, exportedFilePath, mappingConfig);
             Console.WriteLine($"  Exported to: {exportedFilePath}");
 
             // Re-import exported file once
             Console.WriteLine("Re-importing exported CSV once...");
-            reimportedDatabase = CsvToolImporter.ImportFromFiles(exportedFilePath, mappingPath, MessageFlags.None);
+            reimportedDatabase = CsvToolImporter.ImportFromFiles(exportedFilePath, mappingConfig, MessageFlags.None);
             if (reimportedDatabase == null || reimportedDatabase.Tools.Count == 0)
             {
                 throw new Exception("Failed to re-import exported tools");
@@ -375,13 +376,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var simpleMappingPath = Path.Combine(outputDir, "test_simple_mapping.json");
-            using (var stream = new FileStream(simpleMappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create database with tools containing special characters
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -412,9 +406,6 @@ namespace ImportCsvTools.Tests
             tool3.Tool_type_id = (Enums.ToolTypes)1; // End mill
             tool3.Tool_material_id = (Enums.ToolMaterials)1; // Carbide
             testDb.Tools.Add(tool3);
-
-            // Export to CSV
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, simpleMappingPath);
 
             // Read raw CSV and verify escaping
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -459,7 +450,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Re-import and verify strings are identical
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, simpleMappingPath, MessageFlags.None);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
 
             var reimportedTool1 = reimported.Tools.FirstOrDefault(t => t.Number == 1);
             var reimportedTool2 = reimported.Tools.FirstOrDefault(t => t.Number == 2);
@@ -497,13 +488,6 @@ namespace ImportCsvTools.Tests
             mapping.CsvInputUnits = "mm";
             mapping.AllowInvalidToolImport = true; // Allow import of test tools without all required fields
 
-            // Save modified mapping
-            using (var stream = new FileStream(mmMappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create database with tool in inches
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -519,7 +503,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export to CSV with mm mapping
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mmMappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read exported CSV and check diameter value
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -556,7 +540,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Re-import and verify it converts back
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mmMappingPath, MessageFlags.None);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
             var reimportedTool = reimported.Tools.FirstOrDefault();
 
             if (reimportedTool == null)
@@ -594,13 +578,6 @@ namespace ImportCsvTools.Tests
             mapping.CsvInputUnits = "in";
             mapping.AllowInvalidToolImport = true; // Allow import of test tools without all required fields
 
-            // Save modified mapping
-            using (var stream = new FileStream(inchesMappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create database with tool in mm
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -616,7 +593,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export to CSV with inches mapping
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, inchesMappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read exported CSV and check diameter value
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -653,7 +630,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Re-import and verify it converts back
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, inchesMappingPath, MessageFlags.None);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
             var reimportedTool = reimported.Tools.FirstOrDefault();
 
             if (reimportedTool == null)
@@ -696,13 +673,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mixedMappingPath = Path.Combine(outputDir, "test_mixed_mapping.json");
-            using (var stream = new FileStream(mixedMappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create database with tools in different units
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -730,7 +700,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool2);
 
             // Export to CSV
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mixedMappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read exported CSV and verify no conversion occurred
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -796,7 +766,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Re-import and verify units preserved
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mixedMappingPath, MessageFlags.None);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
             var reimportedTool1 = reimported.Tools.FirstOrDefault(t => t.Number == 1);
             var reimportedTool2 = reimported.Tools.FirstOrDefault(t => t.Number == 2);
 
@@ -838,13 +808,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_export_expression_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create test database
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -859,7 +822,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV and verify expression was applied
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -910,12 +873,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_export_expression_error_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create test database
             var testDb = new DataBase();
@@ -931,7 +888,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export should not crash
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV and verify original value is used (fallback behavior)
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -981,12 +938,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_enum_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create test database
             var testDb = new DataBase();
@@ -1000,7 +951,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV and verify enum names are used
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -1050,7 +1001,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Verify we can reimport successfully
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mappingPath, MessageFlags.None);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
             if (reimported.Tools.Count != 1)
             {
                 throw new Exception("Failed to reimport tool with enum names");
@@ -1098,12 +1049,6 @@ namespace ImportCsvTools.Tests
             });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
 
-            var mappingPath = Path.Combine(outputDir, "test_unmapped_values_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create test database with tool using unmapped material
             var testDb = new DataBase();
@@ -1118,7 +1063,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV and verify unmapped value passes through
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -1150,7 +1095,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Verify reimport works
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mappingPath, MessageFlags.None);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
             if (reimported.Tools.Count != 1)
             {
                 throw new Exception("Failed to reimport");
@@ -1185,12 +1130,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_null_fields_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create tool with null Comment field
             var testDb = new DataBase();
@@ -1205,7 +1144,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV and verify default value is used
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -1254,12 +1193,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_numeric_edge_cases_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create tools with edge case numeric values
             var testDb = new DataBase();
@@ -1296,8 +1229,8 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool3);
 
             // Export and reimport
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mappingPath, MessageFlags.None);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
 
             if (reimported.Tools.Count != 3)
             {
@@ -1345,13 +1278,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_non_dimensional_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create tool with inch units
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -1366,7 +1292,7 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool);
 
             // Export
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -1422,13 +1348,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_header_structure_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create test tools
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -1447,7 +1366,7 @@ namespace ImportCsvTools.Tests
             }
 
             // Export
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
 
             // Read CSV and validate structure
             var csvLines = File.ReadAllLines(testOutputPath);
@@ -1567,12 +1486,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_multiple_tool_types_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create database with different tool types
             var testDb = new DataBase();
@@ -1612,8 +1525,8 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(faceMill);
 
             // Export and reimport
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mappingPath, MessageFlags.None);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
 
             if (reimported.Tools.Count != 3)
             {
@@ -1662,12 +1575,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_library_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
 
             // Create database with tools in different libraries
             var testDb = new DataBase();
@@ -1700,8 +1607,8 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool3);
 
             // Export and reimport
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mappingPath, MessageFlags.None);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
 
             if (reimported.Tools.Count != 3)
             {
@@ -1749,13 +1656,6 @@ namespace ImportCsvTools.Tests
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Type", ToolField = "Tool_type_id", EnumType = "ToolTypes" });
             mapping.Mappings.Add(new CsvMapping { CsvColumn = "Tool Material", ToolField = "Tool_material_id", EnumType = "ToolMaterials" });
 
-            var mappingPath = Path.Combine(outputDir, "test_string_preservation_mapping.json");
-            using (var stream = new FileStream(mappingPath, FileMode.Create))
-            {
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(CsvMappingConfig));
-                serializer.WriteObject(stream, mapping);
-            }
-
             // Create tools with various string content
             var testDb = new DataBase();
             testDb.AddLibrary("Test Library");
@@ -1788,8 +1688,8 @@ namespace ImportCsvTools.Tests
             testDb.Tools.Add(tool3);
 
             // Export and reimport
-            CsvToolImporter.ExportToFile(testDb, testOutputPath, mappingPath);
-            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mappingPath, MessageFlags.None);
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
+            var reimported = CsvToolImporter.ImportFromFiles(testOutputPath, mapping, MessageFlags.None);
 
             if (reimported.Tools.Count != 3)
             {
