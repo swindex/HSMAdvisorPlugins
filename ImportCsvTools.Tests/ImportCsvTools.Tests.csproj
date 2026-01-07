@@ -48,6 +48,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -55,6 +56,8 @@
     <Compile Include="CsvImportTest.cs" />
     <Compile Include="CsvExportTest.cs" />
     <Compile Include="CsvCompletenessTest.cs" />
+    <Compile Include="ExpressionEvaluatorTest.cs" />
+    <Compile Include="ExportUnitConversion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

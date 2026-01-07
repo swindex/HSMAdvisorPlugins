@@ -407,6 +407,9 @@ namespace ImportCsvTools.Tests
             tool3.Tool_material_id = (Enums.ToolMaterials)1; // Carbide
             testDb.Tools.Add(tool3);
 
+            // Export to CSV
+            CsvToolImporter.ExportToFile(testDb, testOutputPath, mapping);
+
             // Read raw CSV and verify escaping
             var csvLines = File.ReadAllLines(testOutputPath);
             if (csvLines.Length < 4)

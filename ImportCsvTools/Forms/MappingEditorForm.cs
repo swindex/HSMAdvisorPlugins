@@ -76,6 +76,10 @@ namespace ImportCsvTools.Forms
             {
                 radioButtonMillimeters.Checked = true;
             }
+            else if (string.Equals(_config.CsvInputUnits, "mixed", StringComparison.OrdinalIgnoreCase))
+            {
+                radioButtonMixed.Checked = true;
+            }
             else
             {
                 radioButtonInches.Checked = true;
@@ -357,7 +361,7 @@ namespace ImportCsvTools.Forms
         private void UpdateRequiredFieldsLabel()
         {
             var mappings = GetMappingsFromGrid();
-            var missing = ReflectionHelpers.ValidateRequiredFields(mappings);
+            var missing = ReflectionHelpers.ValidateRequiredFields(mappings, this.radioButtonMixed.Checked);
 
             if (missing.Count == 0)
             {
@@ -539,7 +543,15 @@ namespace ImportCsvTools.Forms
                 // Update config from UI
                 _config.LibraryName = txtLibraryName.Text?.Trim();
                 _config.AllowInvalidToolImport = chkAllowInvalidToolImport.Checked;
-                _config.CsvInputUnits = radioButtonMillimeters.Checked ? "mm" : "in";
+
+                // Determine which radio button is checked
+                if (radioButtonMillimeters.Checked)
+                    _config.CsvInputUnits = "mm";
+                else if (radioButtonMixed.Checked)
+                    _config.CsvInputUnits = "mixed";
+                else
+                    _config.CsvInputUnits = "in";
+
                 _config.Mappings = GetMappingsFromGrid();
 
                 // Validate required fields

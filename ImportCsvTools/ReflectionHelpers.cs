@@ -119,13 +119,20 @@ namespace ImportCsvTools
         /// <summary>
         /// Validates that all required fields are present in the mapping
         /// </summary>
-        public static List<string> ValidateRequiredFields(List<CsvMapping> mappings)
+        public static List<string> ValidateRequiredFields(List<CsvMapping> mappings, bool requireInputMapping = false)
         {
             var mappedFields = new HashSet<string>(
                 mappings.Select(m => m.ToolField),
                 StringComparer.OrdinalIgnoreCase);
 
-            return RequiredFields
+            var reqs = RequiredFields.ToList();
+
+            if (requireInputMapping)
+            {
+                reqs.Add("Input_units_m");
+            }
+
+            return reqs
                 .Where(rf => !mappedFields.Contains(rf))
                 .ToList();
         }

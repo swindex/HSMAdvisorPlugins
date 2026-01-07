@@ -36,7 +36,7 @@ namespace ImportCsvTools
                 result.Mappings = result.Mappings ?? new List<CsvMapping>();
 
                 // Validate mixed units requirement
-                if (string.Equals(result.CsvInputUnits, "mixed", StringComparison.OrdinalIgnoreCase))
+                /*if (string.Equals(result.CsvInputUnits, "mixed", StringComparison.OrdinalIgnoreCase))
                 {
                     bool hasInputUnitsMapping = false;
                     foreach (var mapping in result.Mappings)
@@ -54,7 +54,7 @@ namespace ImportCsvTools
                         throw new InvalidOperationException(
                             "When CsvInputUnits is 'mixed', the Input_units_m (or _Input_units_m) field must be mapped to properly handle tools with different unit systems.");
                     }
-                }
+                }*/
 
                 return result;
             }
