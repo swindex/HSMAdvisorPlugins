@@ -131,7 +131,6 @@ namespace ImportCsvTools.Forms
             if (info == null)
             {
                 lblLibraryName.Text = "Library Name: N/A";
-                lblHasHeaders.Text = "First Row Has Headers: N/A";
                 lblMappingCount.Text = "Number of Mappings: 0";
                 btnImport.Enabled = false;
                 btnEdit.Enabled = false;
@@ -142,6 +141,8 @@ namespace ImportCsvTools.Forms
             lblMappingCount.Text = $"Number of Mappings: {info.Config.Mappings?.Count ?? 0}";
             btnImport.Enabled = true;
             btnEdit.Enabled = true;
+
+            btnImport.Text = (CsvColumns == null) ? "Export" : "Import";
         }
 
         private void btnImport_Click(object sender, EventArgs e)
