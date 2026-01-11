@@ -34,6 +34,7 @@ namespace ImportCsvTools.Forms
             this.lblCsvInputUnits = new System.Windows.Forms.Label();
             this.radioButtonInches = new System.Windows.Forms.RadioButton();
             this.radioButtonMillimeters = new System.Windows.Forms.RadioButton();
+            this.radioButtonMixed = new System.Windows.Forms.RadioButton();
             this.label2 = new System.Windows.Forms.Label();
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.btnAddMapping = new System.Windows.Forms.Button();
@@ -124,6 +125,16 @@ namespace ImportCsvTools.Forms
             this.radioButtonMillimeters.TabIndex = 15;
             this.radioButtonMillimeters.Text = "mm";
             this.radioButtonMillimeters.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonMixed
+            // 
+            this.radioButtonMixed.AutoSize = true;
+            this.radioButtonMixed.Location = new System.Drawing.Point(180, 3);
+            this.radioButtonMixed.Name = "radioButtonMixed";
+            this.radioButtonMixed.Size = new System.Drawing.Size(53, 17);
+            this.radioButtonMixed.TabIndex = 16;
+            this.radioButtonMixed.Text = "mixed";
+            this.radioButtonMixed.UseVisualStyleBackColor = true;
             // 
             // label2
             // 
@@ -298,19 +309,21 @@ namespace ImportCsvTools.Forms
             // 
             this.tableLayoutPanel6.AutoSize = true;
             this.tableLayoutPanel6.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel6.ColumnCount = 3;
+            this.tableLayoutPanel6.ColumnCount = 4;
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel6.Controls.Add(this.lblCsvInputUnits, 0, 0);
             this.tableLayoutPanel6.Controls.Add(this.radioButtonInches, 1, 0);
             this.tableLayoutPanel6.Controls.Add(this.radioButtonMillimeters, 2, 0);
+            this.tableLayoutPanel6.Controls.Add(this.radioButtonMixed, 3, 0);
             this.tableLayoutPanel6.Location = new System.Drawing.Point(144, 0);
             this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(0, 0, 5, 0);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 1;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(177, 23);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(236, 23);
             this.tableLayoutPanel6.TabIndex = 16;
             // 
             // tableLayoutPanel4
@@ -432,6 +445,7 @@ namespace ImportCsvTools.Forms
         private System.Windows.Forms.Label lblCsvInputUnits;
         private System.Windows.Forms.RadioButton radioButtonInches;
         private System.Windows.Forms.RadioButton radioButtonMillimeters;
+        private System.Windows.Forms.RadioButton radioButtonMixed;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.DataGridView dataGridView;
         private System.Windows.Forms.Button btnAddMapping;

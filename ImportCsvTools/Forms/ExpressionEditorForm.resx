@@ -120,19 +120,23 @@
   <data name="lblInstructions.Text" xml:space="preserve">
     <value>ADO.NET DataColumn.Expression
 Use 'v' as a placeholder for the CSV cell value.
+Use 'vl' and 'vu' for Lower Case or Upper Case value of the cell.
+Use 'row_coulmnname' to access any column in the row.
+     Special characters in the column name are replaced with underscore
+     For example: Diameter (mm) is accessed as row_Diameter__mm_
 
 Supported Operations:
   • Math: + - * / ( )
-  • Comparisons: = &lt;&gt; &lt; &lt;= &gt; &gt;=
+  • Comparisons: = &lt;&gt; &lt; &lt;= &gt; &gt;= LIKE
   • Logical: AND OR NOT
-  • Function: IIF(condition, trueValue, falseValue)
-  • String manipulation: LOWER(v), UPPER(v)
+  • Condition: IIF(condition, trueValue, falseValue)
 Help with creating expressions:
 - Ask ChatGTP: "Generate a valid DataColumn.Expression.
       Use v as the input value placeholder: [ enter your requirements here]"
 Examples:
   • v * 25.4
   • v / 1000
-  • IIF(v &gt; 10, 'Large', 'Small')</value>
+  • IIF(v &gt; 10, 'Large', 'Small')
+  • row_Diameter</value>
   </data>
 </root>

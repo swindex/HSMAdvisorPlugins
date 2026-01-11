@@ -51,7 +51,8 @@ namespace ImportCsvTools
                 return null;
             }
 
-            return ImportFromFiles(csvFileName, mappingFileName);
+            var mappingConfig = CsvMappingConfig.Load(mappingFileName);
+            return ImportFromFiles(csvFileName, mappingConfig);
         }
 
         public override void ExportTools(DataBase src)
@@ -95,7 +96,8 @@ namespace ImportCsvTools
             // Step 3: Perform export
             try
             {
-                ExportToFile(src, csvFileName, mappingFileName);
+                var mappingConfig = CsvMappingConfig.Load(mappingFileName);
+                ExportToFile(src, csvFileName, mappingConfig);
 
                 MessageBox.Show(
                     $"Successfully exported {src.Tools.Count} tool(s) to:\n{csvFileName}",
@@ -146,19 +148,19 @@ namespace ImportCsvTools
             }
         }
 
-        public static DataBase ImportFromFiles(string csvFileName, string mappingFileName, MessageFlags msgFlag = MessageFlags.Error)
+        public static DataBase ImportFromFiles(string csvFileName, CsvMappingConfig mappingConfig, MessageFlags msgFlag = MessageFlags.Error)
         {
             if (string.IsNullOrWhiteSpace(csvFileName))
             {
                 throw new ArgumentException("CSV file path must be provided.", nameof(csvFileName));
             }
 
-            if (string.IsNullOrWhiteSpace(mappingFileName))
+            if (mappingConfig == null)
             {
-                throw new ArgumentException("Mapping file path must be provided.", nameof(mappingFileName));
+                throw new ArgumentNullException(nameof(mappingConfig));
             }
 
-            var mapping = CsvMappingConfig.Load(mappingFileName);
+            var mapping = mappingConfig;
 
             var targetDb = new DataBase();
             var libraryName = string.IsNullOrWhiteSpace(mapping.LibraryName)
@@ -235,7 +237,7 @@ namespace ImportCsvTools
                             continue;
                         }
 
-                        if (!TryApplyMapping(tool, map, rawValue, out var error))
+                        if (!TryApplyMapping(tool, map, rawValue, csvColumns, out var error))
                         {
                             Debug.WriteLine(error);
                         }
@@ -319,7 +321,7 @@ namespace ImportCsvTools
             return null;
         }
 
-        private static bool TryApplyMapping(Tool tool, CsvMapping map, string rawValue, out string error)
+        private static bool TryApplyMapping(Tool tool, CsvMapping map, string rawValue, Dictionary<string, string> csvColumns, out string error)
         {
             error = null;
             if (string.IsNullOrWhiteSpace(map.ToolField))
@@ -344,7 +346,7 @@ namespace ImportCsvTools
                 return true;
             }
 
-            if (!TryConvertValue(map, property.PropertyType, value, out var converted))
+            if (!TryConvertValue(map, property.PropertyType, value, csvColumns, out var converted))
             {
                 error = $"Unable to convert value '{value}' for field '{map.ToolField}'.";
                 return false;
@@ -372,14 +374,14 @@ namespace ImportCsvTools
             return rawValue;
         }
 
-        private static bool TryConvertValue(CsvMapping map, Type targetType, string rawValue, out object converted)
+        private static bool TryConvertValue(CsvMapping map, Type targetType, string rawValue, Dictionary<string, string> csvColumns, out object converted)
         {
             converted = null;
 
             var originalRawValue = rawValue;
 
             // Evaluate expression if defined. The result is converted to string for further processing.
-            rawValue = ExpressionEvaluator.EvaluateExpression(map.Expression, rawValue).ToString();
+            rawValue = ExpressionEvaluator.EvaluateExpression(map.Expression, rawValue, csvColumns).ToString();
 
             if (targetType == typeof(string))
             {
@@ -513,16 +515,16 @@ namespace ImportCsvTools
             }
         }
 
-        public static void ExportToFile(DataBase database, string csvFileName, string mappingFileName)
+        public static void ExportToFile(DataBase database, string csvFileName, CsvMappingConfig mappingConfig)
         {
             if (string.IsNullOrWhiteSpace(csvFileName))
             {
                 throw new ArgumentException("CSV file path must be provided.", nameof(csvFileName));
             }
 
-            if (string.IsNullOrWhiteSpace(mappingFileName))
+            if (mappingConfig == null)
             {
-                throw new ArgumentException("Mapping file path must be provided.", nameof(mappingFileName));
+                throw new ArgumentNullException(nameof(mappingConfig));
             }
 
             if (database == null || database.Tools == null || database.Tools.Count == 0)
@@ -530,7 +532,7 @@ namespace ImportCsvTools
                 throw new ArgumentException("Database must contain tools to export.", nameof(database));
             }
 
-            var mapping = CsvMappingConfig.Load(mappingFileName);
+            var mapping = mappingConfig;
 
             // Discover all columns from first tool's Aux_data (if available)
             var allColumnsOrdered = new List<string>();
@@ -624,6 +626,31 @@ namespace ImportCsvTools
                 return map.DefaultValue ?? string.Empty;
             }
 
+            // Build dictionary of tool properties (excluding properties with underscore prefix)
+            var toolProperties = new Dictionary<string, string>();
+            var allProperties = typeof(Tool).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            foreach (var prop in allProperties)
+            {
+                // Skip properties that start with underscore
+                if (prop.Name.StartsWith("_"))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var propValue = prop.GetValue(tool);
+                    if (propValue != null)
+                    {
+                        toolProperties[prop.Name] = propValue.ToString();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to read property '{prop.Name}': {ex.Message}");
+                }
+            }
+
             string stringValue;
 
             // Handle enum values - convert to enum name
@@ -642,7 +669,7 @@ namespace ImportCsvTools
                 {
                     try
                     {
-                        var expressionResult = ExpressionEvaluator.EvaluateExpression(map.ExportExpression, numericValue.ToString(CultureInfo.InvariantCulture));
+                        var expressionResult = ExpressionEvaluator.EvaluateExpression(map.ExportExpression, numericValue.ToString(CultureInfo.InvariantCulture), toolProperties);
                         numericValue = Convert.ToDouble(expressionResult);
                     }
                     catch (Exception ex)

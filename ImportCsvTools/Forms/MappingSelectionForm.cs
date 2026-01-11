@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -93,8 +94,9 @@ namespace ImportCsvTools.Forms
                         _mappingFiles.Add(info);
                         listBoxMappings.Items.Add(info);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Debug.WriteLine(ex);
                         // Skip invalid files
                     }
                 }

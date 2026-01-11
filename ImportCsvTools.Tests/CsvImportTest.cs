@@ -14,22 +14,6 @@ namespace ImportCsvTools.Tests
         private const string TestDataDirectory = @"..\..\test-data";
 
         [TestMethod]
-        public void RunAllTests()
-        {
-            var testDataDir = Path.GetFullPath(TestDataDirectory);
-            var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
-            var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
-
-            EnsureTestFilesExist(csvPath, mappingPath);
-
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
-
-            TestToolCount(database);
-            TestLibraryName(database);
-            TestToolMappings(database);
-        }
-
-        [TestMethod]
         public void TestFilesExist()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
@@ -57,12 +41,14 @@ namespace ImportCsvTools.Tests
         }
 
         [TestMethod]
-        public void TestImportedToolCount()
+        public void TestImportedValidToolCount()
         {
             var testDataDir = Path.GetFullPath(TestDataDirectory);
             var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
             var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
+            var mappingConfig = CsvMappingConfig.Load(mappingPath);
+            mappingConfig.AllowInvalidToolImport = false;
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingConfig, MessageFlags.None);
 
             TestToolCount(database);
         }
@@ -83,7 +69,7 @@ namespace ImportCsvTools.Tests
 
             if (database.Tools.Count != 288)
             {
-                throw new Exception($"Expected 3 tools, found {database.Tools.Count}");
+                throw new Exception($"Expected 288 valid tools, found {database.Tools.Count}");
             }
 
             Console.WriteLine("PASS");
@@ -95,7 +81,8 @@ namespace ImportCsvTools.Tests
             var testDataDir = Path.GetFullPath(TestDataDirectory);
             var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
             var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
+            var mappingConfig = CsvMappingConfig.Load(mappingPath);
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingConfig, MessageFlags.None);
 
             TestLibraryName(database);
         }
@@ -125,7 +112,8 @@ namespace ImportCsvTools.Tests
             var testDataDir = Path.GetFullPath(TestDataDirectory);
             var csvPath = Path.Combine(testDataDir, "Tool Master Import for HSMA.csv");
             var mappingPath = Path.Combine(testDataDir, "Tool_Master_Import_for_HSMA.mapping.json");
-            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingPath, MessageFlags.None);
+            var mappingConfig = CsvMappingConfig.Load(mappingPath);
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingConfig, MessageFlags.None);
 
             TestToolMappings(database);
         }
