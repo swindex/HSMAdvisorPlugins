@@ -40,6 +40,7 @@ Partial Class Form1
         '
         'cmb_plugins
         '
+        Me.cmb_plugins.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cmb_plugins.FormattingEnabled = True
         Me.cmb_plugins.Location = New System.Drawing.Point(13, 94)
         Me.cmb_plugins.Name = "cmb_plugins"

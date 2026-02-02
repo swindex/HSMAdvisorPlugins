@@ -235,6 +235,33 @@ namespace ImportCsvTools.Forms
             }
         }
 
+        private void btnOpenDirectory_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (Directory.Exists(_mappingDirectory))
+                {
+                    Process.Start("explorer.exe", _mappingDirectory);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Directory does not exist:\n{_mappingDirectory}",
+                        "Directory Not Found",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Failed to open directory:\n{ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
         private class MappingFileInfo
         {
             public string FilePath { get; set; }

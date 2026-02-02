@@ -1,0 +1,47 @@
+{
+    "LibraryName": "Enum Expression Test",
+    "AllowInvalidToolImport": false,
+    "CsvInputUnits": "in",
+    "Mappings": [
+        {
+            "CsvColumn": "Tool Number",
+            "ToolField": "Number",
+            "DefaultValue": "",
+            "EnumType": "",
+            "Expression": "",
+            "ValueMap": {}
+        },
+        {
+            "CsvColumn": "Material",
+            "ToolField": "Tool_material_id",
+            "DefaultValue": "HSS",
+            "EnumType": "ToolMaterials",
+            "Expression": "IIF(vl = 'carb', 'Carbide', IIF(vl = 'hss-co', 'HSCobalt', IIF(vl = 'ceramic', 'Ceramic', v)))",
+            "ValueMap": {}
+        },
+        {
+            "CsvColumn": "Type",
+            "ToolField": "Tool_type_id",
+            "DefaultValue": "SolidEndMill",
+            "EnumType": "ToolTypes",
+            "Expression": "IIF(vl = 'em', 'SolidEndMill', IIF(vl = 'bn', 'SolidBallMill', IIF(vl = 'fem', 'IndexedFaceMill', v)))",
+            "ValueMap": {}
+        },
+        {
+            "CsvColumn": "Diameter",
+            "ToolField": "Diameter",
+            "DefaultValue": "0.5",
+            "EnumType": "",
+            "Expression": "",
+            "ValueMap": {}
+        },
+        {
+            "CsvColumn": "",
+            "ToolField": "Coating_id",
+            "DefaultValue": "None",
+            "EnumType": "ToolCoatings",
+            "Expression": "",
+            "ValueMap": {}
+        }
+    ]
+}

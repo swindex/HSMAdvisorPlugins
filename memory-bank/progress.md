@@ -60,10 +60,15 @@
 - **Method Invocation**: Test import/export operations independently
 - **Result Inspection**: PropertyGrid for detailed result examination
 - **Error Handling**: Exception display and debugging support
-- **Unit Test Projects**: NUnit-based testing for both plugins
-  - ExchangeHSMWorks.Tests: HSMWorks conversion tests
-  - ImportCsvTools.Tests: CSV import tests
+- **Unit Test Projects**: MSTest-based testing for both plugins
+  - ExchangeHSMWorks.Tests: HSMWorks conversion tests (89 tests)
+  - ImportCsvTools.Tests: CSV import tests including:
+    - Expression evaluation flow to enum parsing test
+    - CSV export tests
+    - Completeness validation tests
+    - Expression evaluator unit tests
 - **Test Data Management**: Organized test-data directories with sample files
+- **Test Execution**: Using `dotnet vstest` with MSTest adapter for reliable test execution
 
 ### ✅ Error Handling & Robustness
 - **Graceful Degradation**: Default values for missing/unknown properties

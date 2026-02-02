@@ -404,6 +404,16 @@ namespace ImportCsvTools
             {
                 try
                 {
+                    converted = Enum.Parse(targetType, rawValue);
+                    return true;
+                }
+                catch
+                {
+                    //Dont exit yet, try original raw value
+                }
+
+                try
+                {
                     converted = Enum.Parse(targetType, originalRawValue);
                     return true;
                 }

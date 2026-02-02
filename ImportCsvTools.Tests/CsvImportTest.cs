@@ -156,5 +156,80 @@ namespace ImportCsvTools.Tests
 
             Console.WriteLine("PASS");
         }
+
+        [TestMethod]
+        public void TestExpressionEvaluationFlowsToEnumParsing()
+        {
+            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            var csvPath = Path.Combine(testDataDir, "enum-expression-test.csv");
+            var mappingPath = Path.Combine(testDataDir, "enum-expression-test.mapping.json");
+            var mappingConfig = CsvMappingConfig.Load(mappingPath);
+            var database = CsvToolImporter.ImportFromFiles(csvPath, mappingConfig, MessageFlags.None);
+
+            TestExpressionToEnumConversion(database);
+        }
+
+        private static void TestExpressionToEnumConversion(DataBase database)
+        {
+            Console.Write("Testing expression evaluation flows to enum parsing... ");
+
+            if (database == null || database.Tools == null || database.Tools.Count == 0)
+            {
+                throw new Exception("Database result is null or contains no tools");
+            }
+
+            // Test Tool 1: "Carb" should be transformed to "Carbide" by expression, then parsed as enum
+            var tool1 = database.Tools.FirstOrDefault(tool => tool.Number == 1);
+            if (tool1 == null)
+            {
+                throw new Exception("Tool number 1 was not imported");
+            }
+
+            if ((Enums.ToolMaterials)tool1.Tool_material_id != Enums.ToolMaterials.Carbide)
+            {
+                throw new Exception($"Tool 1: Expected material 'Carbide' (enum value from expression 'Carb' -> 'Carbide'), but got '{(Enums.ToolMaterials)tool1.Tool_material_id}'");
+            }
+
+            if ((Enums.ToolTypes)tool1.Tool_type_id != Enums.ToolTypes.SolidEndMill)
+            {
+                throw new Exception($"Tool 1: Expected type 'SolidEndMill' (enum value from expression 'EM' -> 'SolidEndMill'), but got '{(Enums.ToolTypes)tool1.Tool_type_id}'");
+            }
+
+            // Test Tool 2: "HSS-Co" should be transformed to "HSCobalt" by expression, then parsed as enum
+            var tool2 = database.Tools.FirstOrDefault(tool => tool.Number == 2);
+            if (tool2 == null)
+            {
+                throw new Exception("Tool number 2 was not imported");
+            }
+
+            if ((Enums.ToolMaterials)tool2.Tool_material_id != Enums.ToolMaterials.HSCobalt)
+            {
+                throw new Exception($"Tool 2: Expected material 'HSCobalt' (enum value from expression 'HSS-Co' -> 'HSCobalt'), but got '{(Enums.ToolMaterials)tool2.Tool_material_id}'");
+            }
+
+            if ((Enums.ToolTypes)tool2.Tool_type_id != Enums.ToolTypes.SolidBallMill)
+            {
+                throw new Exception($"Tool 2: Expected type 'SolidBallMill' (enum value from expression 'BN' -> 'SolidBallMill'), but got '{(Enums.ToolTypes)tool2.Tool_type_id}'");
+            }
+
+            // Test Tool 3: "Ceramic" should be transformed to "Ceramic" by expression, then parsed as enum
+            var tool3 = database.Tools.FirstOrDefault(tool => tool.Number == 3);
+            if (tool3 == null)
+            {
+                throw new Exception("Tool number 3 was not imported");
+            }
+
+            if ((Enums.ToolMaterials)tool3.Tool_material_id != Enums.ToolMaterials.Ceramic)
+            {
+                throw new Exception($"Tool 3: Expected material 'Ceramic' (enum value from expression 'Ceramic' -> 'Ceramic'), but got '{(Enums.ToolMaterials)tool3.Tool_material_id}'");
+            }
+
+            if ((Enums.ToolTypes)tool3.Tool_type_id != Enums.ToolTypes.IndexedFaceMill)
+            {
+                throw new Exception($"Tool 3: Expected type 'IndexedFaceMill' (enum value from expression 'FEM' -> 'IndexedFaceMill'), but got '{(Enums.ToolTypes)tool3.Tool_type_id}'");
+            }
+
+            Console.WriteLine("PASS");
+        }
     }
 }

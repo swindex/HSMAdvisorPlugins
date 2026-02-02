@@ -325,6 +325,33 @@ public class ExpressionEvaluator
 
 ## Testing Infrastructure
 
+### Running Unit Tests
+
+The solution uses **MSTest** framework for unit testing. Due to the test project configuration, standard `dotnet test` commands don't work reliably. Use these commands instead:
+
+#### Build Tests
+```bash
+dotnet build ImportCsvTools.Tests/ImportCsvTools.Tests.csproj
+dotnet build ExchangeHSMWorks.Tests/ExchangeHSMWorks.Tests.csproj
+```
+
+#### Run All Tests
+```bash
+dotnet vstest ImportCsvTools.Tests/bin/Debug/ImportCsvTools.Tests.dll --TestAdapterPath:packages/MSTest.TestAdapter.2.2.10/build/_common
+dotnet vstest ExchangeHSMWorks.Tests/bin/Debug/ExchangeHSMWorks.Tests.exe --TestAdapterPath:packages/MSTest.TestAdapter.2.2.10/build/_common
+```
+
+#### Run Specific Test
+```bash
+dotnet vstest ImportCsvTools.Tests/bin/Debug/ImportCsvTools.Tests.dll --TestAdapterPath:packages/MSTest.TestAdapter.2.2.10/build/_common --Tests:TestMethodName
+```
+
+#### Important Notes
+- **Do not use `dotnet test`** - it doesn't discover tests properly in this solution
+- **Always specify `--TestAdapterPath`** - required for MSTest adapter discovery
+- **Build before testing** - vstest doesn't automatically rebuild
+- Tests are in `bin/Debug` for Debug configuration, `bin/Release` for Release
+
 ### Plugin Test Runner Architecture
 ```vb
 Public Class Form1
