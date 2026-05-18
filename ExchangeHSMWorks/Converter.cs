@@ -434,7 +434,7 @@ namespace ExchangeHSMWorks
                         break;
                     //case "center drill":
                     case Enums.ToolTypes.JobberTwistDrill:
-                        ret.type = "drilll";
+                        ret.type = "drill";
                         break;
                     case Enums.ToolTypes.SpotDrill:
                         ret.type = "spot drill";
