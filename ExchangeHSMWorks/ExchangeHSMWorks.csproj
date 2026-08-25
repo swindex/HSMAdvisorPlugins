@@ -76,4 +76,10 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist "$(SolutionDir)release\" mkdir "$(SolutionDir)release"
+
+copy /Y "$(TargetDir)$(TargetFileName)" "$(SolutionDir)release\"
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>

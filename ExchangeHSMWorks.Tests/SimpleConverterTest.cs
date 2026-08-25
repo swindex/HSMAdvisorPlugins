@@ -88,6 +88,7 @@ namespace ExchangeHSMWorks.Tests
             TestToolGeometry();
             TestManufacturerData();
             TestRoundTripData();
+            TestToToolFromToolLossless();
             TestMaterialConversion();
             TestCapabilities();
 
@@ -102,7 +103,7 @@ namespace ExchangeHSMWorks.Tests
         {
             Console.WriteLine("Loading test data files...");
 
-            var testDataDir = Path.GetFullPath(TestDataDirectory);
+            var testDataDir = GetTestDataDirectory();
             if (!Directory.Exists(testDataDir))
             {
                 throw new DirectoryNotFoundException($"Test data directory not found: {testDataDir}");
@@ -134,6 +135,40 @@ namespace ExchangeHSMWorks.Tests
 
             Console.WriteLine($"Loaded {_testDataCache.Count} test data files");
             Console.WriteLine();
+        }
+
+        private void EnsureTestDataLoaded()
+        {
+            if (_testDataCache.Count == 0)
+                LoadAllTestData();
+        }
+
+        private string GetTestDataDirectory()
+        {
+            var baseDirectories = new[]
+            {
+                Directory.GetCurrentDirectory(),
+                AppDomain.CurrentDomain.BaseDirectory
+            };
+
+            foreach (var baseDirectory in baseDirectories)
+            {
+                var directory = new DirectoryInfo(baseDirectory);
+                while (directory != null)
+                {
+                    var candidate = Path.Combine(directory.FullName, TestDataDirectory);
+                    if (Directory.Exists(candidate))
+                        return candidate;
+
+                    candidate = Path.Combine(directory.FullName, "test-data");
+                    if (Directory.Exists(candidate))
+                        return candidate;
+
+                    directory = directory.Parent;
+                }
+            }
+
+            return Path.GetFullPath(TestDataDirectory);
         }
 
         /// <summary>
@@ -349,6 +384,8 @@ namespace ExchangeHSMWorks.Tests
         {
             Console.Write("Testing tool type mapping... ");
 
+            EnsureTestDataLoaded();
+
             var allToolTypes = new HashSet<Enums.ToolTypes>();
             var hasEndMills = false;
             var hasBallMills = false;
@@ -473,16 +510,22 @@ namespace ExchangeHSMWorks.Tests
         {
             Console.Write("Testing manufacturer data... ");
 
+            EnsureTestDataLoaded();
+
             foreach (var testData in _testDataCache.Values)
             {
-                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Brand_name)))
-                    throw new Exception($"Some tools missing manufacturer name in {testData.FileName}");
+                foreach (var originalTool in testData.OriginalData.tool)
+                {
+                    var convertedTool = testData.Database.Tools.FirstOrDefault(t => t.Guid == originalTool.guid);
+                    if (convertedTool == null)
+                        throw new Exception($"Converted tool not found for source GUID '{originalTool.guid}' in {testData.FileName}");
 
-                if (!testData.Database.Tools.All(t => t.Brand_name == "HARVEY TOOL"))
-                    throw new Exception($"Not all tools are from Harvey Tool in {testData.FileName}");
+                    if (!string.Equals(convertedTool.Brand_name, originalTool.manufacturer, StringComparison.Ordinal))
+                        throw new Exception($"Manufacturer changed for tool '{originalTool.productid}' in {testData.FileName}");
 
-                if (!testData.Database.Tools.All(t => !string.IsNullOrEmpty(t.Series_name)))
-                    throw new Exception($"Some tools missing product ID in {testData.FileName}");
+                    if (!string.Equals(convertedTool.Series_name, originalTool.productid, StringComparison.Ordinal))
+                        throw new Exception($"Product ID changed for tool '{originalTool.productid}' in {testData.FileName}");
+                }
             }
 
             Console.WriteLine("PASS");
@@ -510,6 +553,33 @@ namespace ExchangeHSMWorks.Tests
                     catch (Exception ex)
                     {
                         throw new Exception($"Failed to deserialize Aux_data for tool {tool.Series_name} in {testData.FileName}: {ex.Message}");
+                    }
+                }
+            }
+
+            Console.WriteLine("PASS");
+        }
+
+        [TestMethod]
+        public void TestToToolFromToolLossless()
+        {
+            Console.Write("Testing ToTool/FromTool lossless round-trip... ");
+
+            EnsureTestDataLoaded();
+
+            foreach (var testData in _testDataCache.Values)
+            {
+                foreach (var originalTool in testData.OriginalData.tool)
+                {
+                    var convertedTool = Converter.ToTool(originalTool);
+                    var exportedTool = Converter.FromTool(convertedTool);
+
+                    var expectedXml = Serializer.ToXML(originalTool, "UTF-16");
+                    var actualXml = Serializer.ToXML(exportedTool, "UTF-16");
+
+                    if (!string.Equals(expectedXml, actualXml, StringComparison.Ordinal))
+                    {
+                        throw new Exception($"ToTool/FromTool round-trip changed tool '{originalTool.productid}' in {testData.FileName}.");
                     }
                 }
             }

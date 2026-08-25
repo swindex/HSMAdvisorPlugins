@@ -44,12 +44,14 @@ namespace ExchangeHSMWorks
         }
         public static Tool ToTool(toollibraryTool t)
         {
+            var unitsMetric = t.unit == "millimeters";
+
             Tool ret = new Tool(true)
             {
                 Tool_type_id = Enums.ToolTypes.SolidEndMill,
-                
+
                 Coating_id = Enums.ToolCoatings.None,
-                Tool_material_id = ToToolMaterial(t.material.name),
+                Tool_material_id = ToToolMaterial(t.material?.name),
 
                 Guid = t.guid,
                 Comment = t.description,
@@ -60,33 +62,33 @@ namespace ExchangeHSMWorks
                 Series_name = t.productid,
                 Product_link = t.productlink,
 
-                Number = Parse.ToInteger(t.nc.number),
+                Number = Parse.ToInteger(t.nc?.number),
 
-                Offset_Diameter = Parse.ToInteger(t.nc.diameteroffset),
-                Offset_Length = Parse.ToInteger(t.nc.lengthoffset),
+                Offset_Diameter = Parse.ToInteger(t.nc?.diameteroffset),
+                Offset_Length = Parse.ToInteger(t.nc?.lengthoffset),
 
                 Aux_data = Serializer.ToXML(t, "UTF-16"),
 
-                Circle_dia_m = t.unit == "millimeters",
-                Depth_m = t.unit == "millimeters",
-                Diameter_m = t.unit == "millimeters",
-                Corner_rad_m = t.unit == "millimeters",
-                Doc_m = t.unit == "millimeters",
-                Feed_m = t.unit == "millimeters",
-                Flute_len_m = t.unit == "millimeters",
-                Input_units_m = t.unit == "millimeters",
-                Ipt_m = t.unit == "millimeters",
-                Peck_m = t.unit == "millimeters",
-                Result_units_m = t.unit == "millimeters",
-                Pilot_Hole_m = t.unit == "millimeters",
-                Sfm_m = t.unit == "millimeters",
-                Shank_Dia_m = t.unit == "millimeters",
-                Shoulder_Dia_m = t.unit == "millimeters",
-                Shoulder_len_m = t.unit == "millimeters",
-                Stickout_m = t.unit == "millimeters",
-                Thread_drill_dia_m = t.unit == "millimeters",
-                Thread_pitch_m = t.unit == "millimeters",
-                Woc_m = t.unit == "millimeters"
+                Circle_dia_m = unitsMetric,
+                Depth_m = unitsMetric,
+                Diameter_m = unitsMetric,
+                Corner_rad_m = unitsMetric,
+                Doc_m = unitsMetric,
+                Feed_m = unitsMetric,
+                Flute_len_m = unitsMetric,
+                Input_units_m = unitsMetric,
+                Ipt_m = unitsMetric,
+                Peck_m = unitsMetric,
+                Result_units_m = unitsMetric,
+                Pilot_Hole_m = unitsMetric,
+                Sfm_m = unitsMetric,
+                Shank_Dia_m = unitsMetric,
+                Shoulder_Dia_m = unitsMetric,
+                Shoulder_len_m = unitsMetric,
+                Stickout_m = unitsMetric,
+                Thread_drill_dia_m = unitsMetric,
+                Thread_pitch_m = unitsMetric,
+                Woc_m = unitsMetric
 
 
             };
@@ -101,8 +103,8 @@ namespace ExchangeHSMWorks
                 ret.Shank_Dia = Parse.ToDouble(t.body.shaftdiameter);
                 ret.Flute_N = Parse.ToInteger(t.body.numberofflutes);
                 ret.Helix_angle = -1;
-                ret.Toolangle_mode = Enums.ToolAngleModes.Lead;
-                ret.Leadangle = 90 - Parse.ToDouble(t.body.taperangle);
+                ret.Toolangle_mode = Enums.ToolAngleModes.Taper;
+                ret.Leadangle = Parse.ToDouble(t.body.taperangle);
             }
 
             //set default values
@@ -121,7 +123,7 @@ namespace ExchangeHSMWorks
                     //Tool_type_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
                     break;
                 case "thread mill":
-                    ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
+                    ret.Thread_pitch = Parse.ToDouble(t.body?.threadpitch);
                     ret.Tool_type_id = Enums.ToolTypes.ThreadMill;
                     break;
                 case "ball end mill":
@@ -135,8 +137,12 @@ namespace ExchangeHSMWorks
                     ret.Tool_type_id = Enums.ToolTypes.WoodRuff;
                     break;
                 case "chamfer mill":
-                    ret.Tool_type_id = Enums.ToolTypes.ChamferMill;
-                    ret.Diameter = Parse.ToDouble(t.body.tipdiameter);
+                    if (t.description != null && t.description.ToUpper().Contains("ENGR"))
+                        ret.Tool_type_id = Enums.ToolTypes.VbitEngraver;
+                    else
+                        ret.Tool_type_id = Enums.ToolTypes.ChamferMill;
+
+                    ret.Diameter = Parse.ToDouble(t.body?.tipdiameter);
                     if (ret.Diameter <= 0)
                         if (ret.Diameter_m)
                         {
@@ -147,35 +153,55 @@ namespace ExchangeHSMWorks
                             ret.Diameter = 0.001;
                         }
                     ret.Diameter = ret.Shank_Dia;
-                    ret.Shank_Dia = Parse.ToDouble(t.body.diameter);
+                    ret.Shank_Dia = Parse.ToDouble(t.body?.diameter);
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-
+                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
                     break;
 
                 case "center drill":
                 case "drill":
                     ret.Tool_type_id = Enums.ToolTypes.JobberTwistDrill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
+                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+
                     ret.Flute_N = 2;
                     break;
                 case "spot drill":
                     ret.Tool_type_id = Enums.ToolTypes.SpotDrill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
+                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
                     ret.Flute_N = 2;
                     break;
                 case "counter bore":
                     ret.Tool_type_id = Enums.ToolTypes.Counterbore;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
+                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    break;
+                case "counter sink":
+                    ret.Tool_type_id = Enums.ToolTypes.CounterSink;
+                    ret.Diameter = Parse.ToDouble(t.body?.tipdiameter);
+                    if (ret.Diameter <= 0)
+                        if (ret.Diameter_m)
+                        {
+                            ret.Diameter = 0.0010 * 25.4;
+                        }
+                        else
+                        {
+                            ret.Diameter = 0.001;
+                        }
+                    ret.Diameter = ret.Shank_Dia;
+                    ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
+                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
                     break;
                 case "tap right hand":
                     ret.Tool_type_id = Enums.ToolTypes.Tap;
-                    ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
-                    ret.Flute_N = 1;
+                    ret.Thread_pitch = Parse.ToDouble(t.body?.threadpitch);
+                    ret.Flute_N = Parse.ToInteger(t.body?.numberoffteeth);
                     break;
                 case "tap left hand":
                     ret.Tool_type_id = Enums.ToolTypes.Tap;
-                    ret.Thread_pitch = Parse.ToDouble(t.body.threadpitch);
-                    ret.Flute_N = 1;
+                    ret.Thread_pitch = Parse.ToDouble(t.body?.threadpitch);
+                    ret.Flute_N = Parse.ToInteger(t.body?.numberoffteeth);
                     break;
                 case "boring bar":
                     ret.Tool_type_id = Enums.ToolTypes.BoringHead;
@@ -185,18 +211,18 @@ namespace ExchangeHSMWorks
                 case "turning general":
                     ret.Tool_type_id = Enums.ToolTypes.TurningProfiling;
                     //ret.Thread_pitch = t.body.threadpitch;
-                    ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
-                    ret.Stickout = Parse.ToDouble(t.turningholder.headlength);
-                    ret.Corner_rad = Parse.ToDouble(t.insert.cornerradius);
+                    ret.Shank_Dia = Parse.ToDouble(t.turningholder?.shankheight);
+                    ret.Stickout = Parse.ToDouble(t.turningholder?.headlength);
+                    ret.Corner_rad = Parse.ToDouble(t.insert?.cornerradius);
 
                     ret.Flute_N = 1;
                     break;
                 case "turning boring":
                     ret.Tool_type_id = Enums.ToolTypes.BoringBar;
                     //ret.Thread_pitch = t.body.threadpitch;
-                    ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
-                    ret.Stickout = Parse.ToDouble(t.turningholder.headlength);
-                    ret.Corner_rad = Parse.ToDouble(t.insert.cornerradius);
+                    ret.Shank_Dia = Parse.ToDouble(t.turningholder?.shankheight);
+                    ret.Stickout = Parse.ToDouble(t.turningholder?.headlength);
+                    ret.Corner_rad = Parse.ToDouble(t.insert?.cornerradius);
 
                     ret.Flute_N = 1;
                     break;
@@ -204,9 +230,9 @@ namespace ExchangeHSMWorks
                     ret.Tool_type_id = Enums.ToolTypes.TurningProfiling;
 
                     //ret.Thread_pitch = t.body.threadpitch;
-                    ret.Shank_Dia = Parse.ToDouble(t.turningholder.shankheight);
-                    ret.Stickout = Parse.ToDouble(t.turningholder.headlength);
-                    ret.Corner_rad = Parse.ToDouble(t.insert.cornerradius);
+                    ret.Shank_Dia = Parse.ToDouble(t.turningholder?.shankheight);
+                    ret.Stickout = Parse.ToDouble(t.turningholder?.headlength);
+                    ret.Corner_rad = Parse.ToDouble(t.insert?.cornerradius);
 
                     ret.Flute_N = 1;
                     break;
@@ -215,7 +241,7 @@ namespace ExchangeHSMWorks
                     ret.Tool_type_id = Enums.ToolTypes.SolidEndMill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Taper;
                     // Fusions's dovetail mills specify taperangle as always positive, but in HSMAdvisor it's negative for dovetails
-                    ret.Toolangle = (-Parse.ToDouble(t.body.taperangle));
+                    ret.Toolangle = (-Parse.ToDouble(t.body?.taperangle));
 
                     break;
                 default:
@@ -283,7 +309,7 @@ namespace ExchangeHSMWorks
                         Comment = srcTool.holder.description,
                         Brand_name = srcTool.holder.vendor,
                         Series_name = srcTool.holder.productid,
-                        Shank_Dia = Parse.ToDouble(srcTool.body.shaftdiameter)
+                        Shank_Dia = Parse.ToDouble(srcTool.body?.shaftdiameter)
                     });
                 }
             });
@@ -352,15 +378,16 @@ namespace ExchangeHSMWorks
             File.WriteAllText(FileName, Serializer.ToXML(targetDB, "UTF-16"));
         }
 
-        private toollibraryTool FromTool(Tool srcTool)
+        public static toollibraryTool FromTool(Tool srcTool)
         {
-
+            Tool originalTool = null;
             toollibraryTool ret = new toollibraryTool();
             if (!string.IsNullOrEmpty(srcTool.Aux_data))
             {
                 try
                 {
                     ret = Serializer.FromXML<toollibraryTool>(srcTool.Aux_data, false);
+                    originalTool = ToTool(ret);
                 }
                 catch (Exception ex)
                 {
@@ -368,43 +395,34 @@ namespace ExchangeHSMWorks
                 }
             }
 
-            if (ret.material == null)
-                ret.material = new toollibraryToolMaterial();
+            SetIfChanged(originalTool, srcTool.Tool_material_id, originalTool?.Tool_material_id ?? default(Enums.ToolMaterials), value => EnsureMaterial(ret).name = FromToolMaterial(value));
+            SetIfChanged(originalTool, srcTool.Guid, originalTool?.Guid, value => ret.guid = value);
 
-            ret.material.name = FromToolMaterial((Enums.ToolMaterials)srcTool.Tool_material_id);
-            ret.guid = srcTool.Guid;
-
-            ret.description = srcTool.Comment;
+            SetIfChanged(originalTool, srcTool.Comment, originalTool?.Comment, value => ret.description = value);
 
 
-            ret.manufacturer = srcTool.Brand_name;
-            ret.productid = srcTool.Series_name;
-            ret.productlink = srcTool.Product_link;
+            SetIfChanged(originalTool, srcTool.Brand_name, originalTool?.Brand_name, value => ret.manufacturer = value);
+            SetIfChanged(originalTool, srcTool.Series_name, originalTool?.Series_name, value => ret.productid = value);
+            SetIfChanged(originalTool, srcTool.Product_link, originalTool?.Product_link, value => ret.productlink = value);
 
 
-            if (ret.nc == null)
-                ret.nc = new toollibraryToolNC();
-            ret.nc.number = Parse.ToString(srcTool.Number);
+            SetIfChanged(originalTool, srcTool.Number, originalTool?.Number ?? 0, value => EnsureNC(ret).number = Parse.ToString(value));
 
-            ret.nc.diameteroffset = Parse.ToString(srcTool.Offset_Diameter);
-            ret.nc.lengthoffset = Parse.ToString(srcTool.Offset_Length);
+            SetIfChanged(originalTool, srcTool.Offset_Diameter, originalTool?.Offset_Diameter ?? 0, value => EnsureNC(ret).diameteroffset = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Offset_Length, originalTool?.Offset_Length ?? 0, value => EnsureNC(ret).lengthoffset = Parse.ToString(value));
 
-            ret.unit = srcTool.Input_units_m ? "millimeters" : "inches";
+            SetIfChanged(originalTool, srcTool.Input_units_m, originalTool?.Input_units_m ?? false, value => ret.unit = value ? "millimeters" : "inches");
 
-            if (ret.body == null)
-                ret.body = new toollibraryToolBody();
+            SetIfChanged(originalTool, srcTool.Diameter, originalTool?.Diameter ?? 0, value => EnsureBody(ret).diameter = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Corner_rad, originalTool?.Corner_rad ?? 0, value => EnsureBody(ret).cornerradius = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Stickout, originalTool?.Stickout ?? 0, value => EnsureBody(ret).bodylength = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Flute_Len, originalTool?.Flute_Len ?? 0, value => EnsureBody(ret).flutelength = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Shoulder_Len, originalTool?.Shoulder_Len ?? 0, value => EnsureBody(ret).shoulderlength = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Shank_Dia, originalTool?.Shank_Dia ?? 0, value => EnsureBody(ret).shaftdiameter = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Flute_N, originalTool?.Flute_N ?? 0, value => EnsureBody(ret).numberofflutes = Parse.ToString(value));
+            SetIfChanged(originalTool, srcTool.Leadangle, originalTool?.Leadangle ?? 0, value => EnsureBody(ret).taperangle = Parse.ToString(90 - value));
 
-            ret.body.diameter = Parse.ToString(srcTool.Diameter);
-            ret.body.cornerradius = Parse.ToString(srcTool.Corner_rad);
-            ret.body.bodylength = Parse.ToString(srcTool.Stickout);
-            ret.body.flutelength = Parse.ToString(srcTool.Flute_Len);
-            ret.body.shoulderlength = Parse.ToString(srcTool.Shoulder_Len);
-            ret.body.shaftdiameter = Parse.ToString(srcTool.Shank_Dia);
-            ret.body.numberofflutes = Parse.ToString(srcTool.Flute_N);
-            ret.body.taperangle = Parse.ToString(90 - srcTool.Leadangle);
-
-            //override type ONLY if none is specified by AUX_DATA
-            if (string.IsNullOrEmpty(ret.type))
+            if (originalTool == null || srcTool.Tool_type_id != originalTool.Tool_type_id || string.IsNullOrEmpty(ret.type))
             {
                 switch ((Enums.ToolTypes)srcTool.Tool_type_id)
                 {
@@ -414,8 +432,8 @@ namespace ExchangeHSMWorks
                         break;
                     case Enums.ToolTypes.ThreadMill:
                         ret.type = "form mill";
-                        ret.body.threadpitch = Parse.ToString(srcTool.Thread_pitch);
-                        ret.body.numberoffteeth = Parse.ToString((int)(srcTool.Flute_Len / srcTool.Thread_pitch));
+                        EnsureBody(ret).threadpitch = Parse.ToString(srcTool.Thread_pitch);
+                        EnsureBody(ret).numberoffteeth = Parse.ToString((int)(srcTool.Flute_Len / srcTool.Thread_pitch));
                         break;
                     case Enums.ToolTypes.SolidBallMill:
                         ret.type = "ball end mill";
@@ -426,10 +444,12 @@ namespace ExchangeHSMWorks
                     case Enums.ToolTypes.WoodRuff:
                         ret.type = "slot mill";
                         break;
+
+                    case Enums.ToolTypes.VbitEngraver:
                     case Enums.ToolTypes.ChamferMill:
                         ret.type = "chamfer mill";
-                        ret.body.tipdiameter = Parse.ToString(srcTool.Diameter);
-                        ret.body.diameter = Parse.ToString(srcTool.Shank_Dia);
+                        EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
+                        EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
 
                         break;
                     //case "center drill":
@@ -439,10 +459,19 @@ namespace ExchangeHSMWorks
                     case Enums.ToolTypes.SpotDrill:
                         ret.type = "spot drill";
                         break;
+                    case Enums.ToolTypes.CounterSink:
+                        ret.type = "counter sink";
+                        EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
+                        EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
+                        break;
+                    case Enums.ToolTypes.Counterbore:
+                        ret.type = "counter bore";
+                        break;
                     //"tap left hand":
                     case Enums.ToolTypes.Tap:
                         ret.type = "tap right hand"; //"tap left hand":
-                        ret.body.threadpitch = Parse.ToString(srcTool.Thread_pitch);
+                        EnsureBody(ret).threadpitch = Parse.ToString(srcTool.Thread_pitch);
+                        EnsureBody(ret).numberoffteeth = Parse.ToString(srcTool.Flute_N);
                         break;
                     case Enums.ToolTypes.BoringHead:
                         ret.type = "boring bar";
@@ -450,45 +479,129 @@ namespace ExchangeHSMWorks
                     //case "turning threading":
                     case Enums.ToolTypes.TurningProfiling:
                         ret.type = "turning general";
-                        if (ret.turningholder == null)
-                            ret.turningholder = new toollibraryToolTurningholder();
 
-                        ret.turningholder.shankheight = Parse.ToString(srcTool.Shank_Dia);
-                        ret.turningholder.headlength = Parse.ToString(srcTool.Stickout);
-                        if (ret.insert == null)
-                            ret.insert = new toollibraryToolInsert();
-                        ret.insert.cornerradius = Parse.ToString(srcTool.Corner_rad);
+                        EnsureTurningHolder(ret).shankheight = Parse.ToString(srcTool.Shank_Dia);
+                        EnsureTurningHolder(ret).headlength = Parse.ToString(srcTool.Stickout);
+                        EnsureInsert(ret).cornerradius = Parse.ToString(srcTool.Corner_rad);
 
                         break;
                     case Enums.ToolTypes.BoringBar:
                         ret.type = "turning boring";
 
-                        if (ret.turningholder == null)
-                            ret.turningholder = new toollibraryToolTurningholder();
-                        ret.turningholder.shankheight = Parse.ToString(srcTool.Shank_Dia);
-                        ret.turningholder.headlength = Parse.ToString(srcTool.Stickout);
-                        if (ret.insert == null)
-                            ret.insert = new toollibraryToolInsert();
-                        ret.insert.cornerradius = Parse.ToString(srcTool.Corner_rad);
+                        EnsureTurningHolder(ret).shankheight = Parse.ToString(srcTool.Shank_Dia);
+                        EnsureTurningHolder(ret).headlength = Parse.ToString(srcTool.Stickout);
+                        EnsureInsert(ret).cornerradius = Parse.ToString(srcTool.Corner_rad);
 
                         break;
                     case Enums.ToolTypes.TurningGrooving:
                         ret.type = "turning grooving";
 
-                        if (ret.turningholder == null)
-                            ret.turningholder = new toollibraryToolTurningholder();
-                        ret.turningholder.shankheight = Parse.ToString(srcTool.Shank_Dia);
-                        ret.turningholder.headlength = Parse.ToString(srcTool.Stickout);
+                        EnsureTurningHolder(ret).shankheight = Parse.ToString(srcTool.Shank_Dia);
+                        EnsureTurningHolder(ret).headlength = Parse.ToString(srcTool.Stickout);
 
-                        if (ret.insert == null)
-                            ret.insert = new toollibraryToolInsert();
-                        ret.insert.cornerradius = Parse.ToString(srcTool.Corner_rad);
+                        EnsureInsert(ret).cornerradius = Parse.ToString(srcTool.Corner_rad);
 
                         break;
 
                 }
             }
+            else
+            {
+                ApplyTypeSpecificChanges(ret, srcTool, originalTool);
+            }
             return ret;
+        }
+
+        private static void ApplyTypeSpecificChanges(toollibraryTool ret, Tool srcTool, Tool originalTool)
+        {
+            switch ((Enums.ToolTypes)srcTool.Tool_type_id)
+            {
+                case Enums.ToolTypes.ThreadMill:
+                    SetIfChanged(originalTool, srcTool.Thread_pitch, originalTool.Thread_pitch, value => EnsureBody(ret).threadpitch = Parse.ToString(value));
+                    if (!AreEqual(srcTool.Thread_pitch, originalTool.Thread_pitch) || !AreEqual(srcTool.Flute_Len, originalTool.Flute_Len))
+                    {
+                        EnsureBody(ret).numberoffteeth = Parse.ToString((int)(srcTool.Flute_Len / srcTool.Thread_pitch));
+                    }
+                    break;
+
+                case Enums.ToolTypes.VbitEngraver:
+                case Enums.ToolTypes.ChamferMill:
+                case Enums.ToolTypes.CounterSink:
+                    if (!AreEqual(srcTool.Diameter, originalTool.Diameter) || !AreEqual(srcTool.Shank_Dia, originalTool.Shank_Dia))
+                    {
+                        EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
+                        EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
+                    }
+                    break;
+
+                case Enums.ToolTypes.Tap:
+                    SetIfChanged(originalTool, srcTool.Thread_pitch, originalTool.Thread_pitch, value => EnsureBody(ret).threadpitch = Parse.ToString(value));
+                    break;
+
+                case Enums.ToolTypes.TurningProfiling:
+                case Enums.ToolTypes.BoringBar:
+                case Enums.ToolTypes.TurningGrooving:
+                    SetIfChanged(originalTool, srcTool.Shank_Dia, originalTool.Shank_Dia, value => EnsureTurningHolder(ret).shankheight = Parse.ToString(value));
+                    SetIfChanged(originalTool, srcTool.Stickout, originalTool.Stickout, value => EnsureTurningHolder(ret).headlength = Parse.ToString(value));
+                    SetIfChanged(originalTool, srcTool.Corner_rad, originalTool.Corner_rad, value => EnsureInsert(ret).cornerradius = Parse.ToString(value));
+                    break;
+            }
+        }
+
+        private static void SetIfChanged<T>(Tool originalTool, T currentValue, T originalValue, Action<T> setValue)
+        {
+            if (originalTool == null || !EqualityComparer<T>.Default.Equals(currentValue, originalValue))
+            {
+                setValue(currentValue);
+            }
+        }
+
+        private static void SetIfChanged(Tool originalTool, double currentValue, double originalValue, Action<double> setValue)
+        {
+            if (originalTool == null || !AreEqual(currentValue, originalValue))
+            {
+                setValue(currentValue);
+            }
+        }
+
+        private static bool AreEqual(double value1, double value2)
+        {
+            return Math.Abs(value1 - value2) < 0.000000000001;
+        }
+
+        private static toollibraryToolMaterial EnsureMaterial(toollibraryTool tool)
+        {
+            if (tool.material == null)
+                tool.material = new toollibraryToolMaterial();
+            return tool.material;
+        }
+
+        private static toollibraryToolNC EnsureNC(toollibraryTool tool)
+        {
+            if (tool.nc == null)
+                tool.nc = new toollibraryToolNC();
+            return tool.nc;
+        }
+
+        private static toollibraryToolBody EnsureBody(toollibraryTool tool)
+        {
+            if (tool.body == null)
+                tool.body = new toollibraryToolBody();
+            return tool.body;
+        }
+
+        private static toollibraryToolTurningholder EnsureTurningHolder(toollibraryTool tool)
+        {
+            if (tool.turningholder == null)
+                tool.turningholder = new toollibraryToolTurningholder();
+            return tool.turningholder;
+        }
+
+        private static toollibraryToolInsert EnsureInsert(toollibraryTool tool)
+        {
+            if (tool.insert == null)
+                tool.insert = new toollibraryToolInsert();
+            return tool.insert;
         }
 
         public string ShowOpenFileDialog()
