@@ -104,7 +104,10 @@ namespace ExchangeHSMWorks
                 ret.Flute_N = Parse.ToInteger(t.body.numberofflutes);
                 ret.Helix_angle = -1;
                 ret.Toolangle_mode = Enums.ToolAngleModes.Taper;
-                ret.Leadangle = Parse.ToDouble(t.body.taperangle);
+                // HSMWorks taperangle is referenced from the vertical (tool axis);
+                // HSMAdvisor stores Leadangle referenced from the horizontal plane,
+                // so convert with the 90 degree complement (fixes swindex/HSMAdvisor#140).
+                ret.Leadangle = 90d - Parse.ToDouble(t.body.taperangle);
             }
 
             //set default values
@@ -155,27 +158,35 @@ namespace ExchangeHSMWorks
                     ret.Diameter = ret.Shank_Dia;
                     ret.Shank_Dia = Parse.ToDouble(t.body?.diameter);
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // HSMWorks taperangle is the included (apex) angle of the cone;
+                    // HSMAdvisor Tip mode stores the half angle from the horizontal plane.
+                    ret.Leadangle = 90d - Parse.ToDouble(t.body?.taperangle) / 2d;
                     break;
 
                 case "center drill":
                 case "drill":
                     ret.Tool_type_id = Enums.ToolTypes.JobberTwistDrill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // HSMWorks taperangle is the included (apex) angle of the cone;
+                    // HSMAdvisor Tip mode stores the half angle from the horizontal plane.
+                    ret.Leadangle = 90d - Parse.ToDouble(t.body?.taperangle) / 2d;
 
                     ret.Flute_N = 2;
                     break;
                 case "spot drill":
                     ret.Tool_type_id = Enums.ToolTypes.SpotDrill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // HSMWorks taperangle is the included (apex) angle of the cone;
+                    // HSMAdvisor Tip mode stores the half angle from the horizontal plane.
+                    ret.Leadangle = 90d - Parse.ToDouble(t.body?.taperangle) / 2d;
                     ret.Flute_N = 2;
                     break;
                 case "counter bore":
                     ret.Tool_type_id = Enums.ToolTypes.Counterbore;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // HSMWorks taperangle is the included (apex) angle of the cone;
+                    // HSMAdvisor Tip mode stores the half angle from the horizontal plane.
+                    ret.Leadangle = 90d - Parse.ToDouble(t.body?.taperangle) / 2d;
                     break;
                 case "counter sink":
                     ret.Tool_type_id = Enums.ToolTypes.CounterSink;
@@ -191,7 +202,9 @@ namespace ExchangeHSMWorks
                         }
                     ret.Diameter = ret.Shank_Dia;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // HSMWorks taperangle is the included (apex) angle of the cone;
+                    // HSMAdvisor Tip mode stores the half angle from the horizontal plane.
+                    ret.Leadangle = 90d - Parse.ToDouble(t.body?.taperangle) / 2d;
                     break;
                 case "tap right hand":
                     ret.Tool_type_id = Enums.ToolTypes.Tap;

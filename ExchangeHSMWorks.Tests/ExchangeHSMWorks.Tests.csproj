@@ -59,10 +59,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SimpleConverterTest.cs" />
+    <Compile Include="TaperAngleReferenceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="test-data\TaperAngleReference.hsmlib" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ExchangeHSMWorks\ExchangeHSMWorks.csproj">

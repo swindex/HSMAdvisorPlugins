@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-16" standalone="no" ?>
+<?xml-stylesheet type='text/xsl' href='tool-library.xsl'?>
+<tool-library xmlns="http://www.hsmworks.com/xml/2004/cnc/tool-library" version="36">
+  <tool guid="a1000000-0000-4000-8000-000000000001" type="tapered mill" unit="millimeters" version="1.5">
+    <description>D10 x 20 x 4deg Tapered Mill</description>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="unspecified"/>
+    <body assembly-gauge-length="5" body-length="5" coolant-support="no" corner-radius="0" diameter="10" flute-length="20" number-of-flutes="2" overall-length="50" shaft-diameter="10" shoulder-diameter="10" shoulder-length="20" taper-angle="4" tapered-type="tapered" thread-pitch="0" thread-profile-angle="60"/>
+    <motion clockwise="yes" cutting-feedrate="1000" entry-feedrate="1000" exit-feedrate="1000" feed-mode="per-minute" plunge-feedrate="333" ramp-angle="2" ramp-feedrate="333" ramp-spindle-rpm="5000" retract-feedrate="0" spindle-rpm="5000" transition-feedrate="1000"/>
+    <presets>
+      <preset description="" id="{11111111-1111-4111-8111-111111111111}" name="Default preset">
+        <parameter key="tool_coolant" value="flood"/>
+        <parameter key="tool_spindleSpeed" value="5000"/>
+      </preset>
+    </presets>
+  </tool>
+  <tool guid="a1000000-0000-4000-8000-000000000002" type="chamfer mill" unit="millimeters" version="1.5">
+    <description>D10 x 90deg Chamfer Mill</description>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="unspecified"/>
+    <body assembly-gauge-length="5" body-length="5" coolant-support="no" corner-radius="0" diameter="10" flute-length="2.5" number-of-flutes="4" overall-length="50" shaft-diameter="10" shoulder-diameter="10" shoulder-length="2.5" taper-angle="90" thread-pitch="0" thread-profile-angle="60" tip-diameter="5"/>
+    <motion clockwise="yes" cutting-feedrate="1000" entry-feedrate="1000" exit-feedrate="1000" feed-mode="per-minute" plunge-feedrate="333" ramp-angle="2" ramp-feedrate="333" ramp-spindle-rpm="5000" retract-feedrate="0" spindle-rpm="5000" transition-feedrate="1000"/>
+    <presets>
+      <preset description="" id="{22222222-2222-4222-8222-222222222222}" name="Default preset">
+        <parameter key="tool_coolant" value="flood"/>
+        <parameter key="tool_spindleSpeed" value="5000"/>
+      </preset>
+    </presets>
+  </tool>
+  <tool guid="a1000000-0000-4000-8000-000000000003" type="counter sink" unit="millimeters" version="1.5">
+    <description>D10 x 120deg Counter Sink</description>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="unspecified"/>
+    <body assembly-gauge-length="5" body-length="5" coolant-support="yes" corner-radius="0" diameter="10" flute-length="1" number-of-flutes="6" overall-length="50" shaft-diameter="10" shoulder-length="1" taper-angle="120" thread-pitch="0" thread-profile-angle="60" tip-diameter="6.535898"/>
+    <motion clockwise="yes" cutting-feedrate="1000" entry-feedrate="1000" exit-feedrate="1000" feed-mode="per-minute" plunge-feedrate="333" ramp-angle="2" ramp-feedrate="333" ramp-spindle-rpm="5000" retract-feedrate="333" spindle-rpm="5000" transition-feedrate="1000"/>
+    <presets>
+      <preset description="" id="{33333333-3333-4333-8333-333333333333}" name="Default preset">
+        <parameter key="tool_coolant" value="flood"/>
+        <parameter key="tool_spindleSpeed" value="5000"/>
+      </preset>
+    </presets>
+  </tool>
+  <tool guid="a1000000-0000-4000-8000-000000000004" type="flat end mill" unit="millimeters" version="1.5">
+    <description>D8 x 10 Flat End Mill</description>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="unspecified"/>
+    <body assembly-gauge-length="5" body-length="5" coolant-support="no" corner-radius="0" diameter="8" flute-length="10" number-of-flutes="3" overall-length="50" shaft-diameter="8" shoulder-diameter="8" shoulder-length="10" thread-pitch="0" thread-profile-angle="60"/>
+    <motion clockwise="yes" cutting-feedrate="1000" entry-feedrate="1000" exit-feedrate="1000" feed-mode="per-minute" plunge-feedrate="333" ramp-angle="2" ramp-feedrate="333" ramp-spindle-rpm="5000" retract-feedrate="0" spindle-rpm="5000" transition-feedrate="1000"/>
+    <presets>
+      <preset description="" id="{44444444-4444-4444-8444-444444444444}" name="Default preset">
+        <parameter key="tool_coolant" value="flood"/>
+        <parameter key="tool_spindleSpeed" value="5000"/>
+      </preset>
+    </presets>
+  </tool>
+</tool-library>
