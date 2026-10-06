@@ -71,7 +71,9 @@ The following table lists all public fields from `ToolDatabase.Tool`, their type
 | Shoulder_Dia | double | No | Shoulder diameter | | `{"CsvColumn": "Shoulder Dia", "ToolField": "Shoulder_Dia"}` |
 | Shoulder_Tapered | bool | No | Shoulder tapered | | `{"CsvColumn": "Shoulder Tapered", "ToolField": "Shoulder_Tapered"}` |
 | Helix_angle | double | No | Helix angle | | `{"CsvColumn": "Helix Angle", "ToolField": "Helix_angle"}` |
-| Leadangle | double | No | Lead angle | | `{"CsvColumn": "Lead Angle", "ToolField": "Leadangle"}` |
+| ToolAngleTip | double | No | Included Tool Tip Angle | | `{"CsvColumn": "Tool Tip Angle", "ToolField": "ToolAngleTip"}` |
+| ToolAngleTaper | double | No | Tool Taper Angle (side wall angle) | | `{"CsvColumn": "Tool Taper Angle", "ToolField": "ToolAngleTaper"}` |
+| Leadangle | double | No | Lead angle | | `{"CsvColumn": "Lead Angle (XY plane to the Tool edge)", "ToolField": "Leadangle"}` |
 | Toolangle_mode | ToolAngleModes | No | Tool angle mode | Lead, Taper, Tip | `{"CsvColumn": "Angle Mode", "ToolField": "Toolangle_mode", "EnumType": "ToolAngleModes"}` |
 | Toolangle | double | No | Tool angle (convenience) | | `{"CsvColumn": "Tool Angle", "ToolField": "Toolangle"}` |
 | Rampmilling | bool | No | Ramp milling capable | | `{"CsvColumn": "Ramp Milling", "ToolField": "Rampmilling"}` |

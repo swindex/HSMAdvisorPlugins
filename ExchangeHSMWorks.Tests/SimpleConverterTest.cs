@@ -67,8 +67,11 @@ namespace ExchangeHSMWorks.Tests
                 Environment.Exit(1);
             }
 
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            if (!Console.IsInputRedirected)
+            {
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }
         }
 
         [TestMethod]
@@ -89,6 +92,10 @@ namespace ExchangeHSMWorks.Tests
             TestManufacturerData();
             TestRoundTripData();
             TestToToolFromToolLossless();
+            TestTaperAngleImport();
+            TestTaperAngleRoundTrip();
+            TestTaperAngleRoundTripNoAuxData();
+            TestTaperAngleModifiedExport();
             TestMaterialConversion();
             TestCapabilities();
 
@@ -654,6 +661,228 @@ namespace ExchangeHSMWorks.Tests
                 throw new Exception("Filter missing .xml extension");
 
             Console.WriteLine("PASS");
+        }
+
+        /// <summary>
+        /// Verifies that taper/flute/tip angles imported from HSMLib are stored from the
+        /// correct vertical reference (see swindex/HSMAdvisor#140).
+        /// HSMWorks "taper-angle" semantics per tool type:
+        ///   - chamfer mill / counter sink: included tip angle
+        ///   - drill / spot drill / counter bore: included point angle
+        ///   - tapered mill (Taper mode): side taper from the tool axis
+        ///   - dovetail mill: included angle, stored negative in HSMAdvisor
+        /// After import, Tool.Toolangle must equal the source taper-angle (per mode), and
+        /// the calculator-facing Leadangle must remain in a valid range (0, 180].
+        /// </summary>
+        [TestMethod]
+        public void TestTaperAngleImport()
+        {
+            Console.Write("Testing taper angle import (vertical reference)... ");
+
+            EnsureTestDataLoaded();
+
+            var testData = _testDataCache["Milling Tools (Inch).hsmlib"];
+
+            // guid -> (expected Toolangle, expected mode)
+            var expected = new Dictionary<string, Tuple<double, Enums.ToolAngleModes>>
+            {
+                { "39052c62-d9a2-42d4-b7c0-5f11cfcb7ffd", Tuple.Create(45d, Enums.ToolAngleModes.Taper) }, // .425" x 45 Chamfer Mill
+                { "2df7b1c1-1e4c-4b59-8023-bb213d775b9c", Tuple.Create(60d, Enums.ToolAngleModes.Taper) }, // .425" x 60 Chamfer Mill
+                { "9001e5e0-20d9-442b-b1ec-3830de668786", Tuple.Create(90d, Enums.ToolAngleModes.Tip) },   // 0.25 DIA Counter Sink
+                { "5bcd0a85-bbae-41d1-b849-d6287df62a12", Tuple.Create(120d, Enums.ToolAngleModes.Tip) },  // 0.5 DIA X 120 deg inc Spot Drill
+                { "38702099-97e9-4e4b-9f60-5cff1a19f700", Tuple.Create(90d, Enums.ToolAngleModes.Tip) },   // 0.5 DIA X 90 deg inc Spot Drill
+                { "8edd1c42-315a-44ca-9303-7c928412ec70", Tuple.Create(-45d, Enums.ToolAngleModes.Taper) }, // Dovetail Mill (taper-angle 45, stored negative)
+                { "ce74e212-05a2-489c-84ba-6d2ed29d9a90", Tuple.Create(-30d, Enums.ToolAngleModes.Taper) }, // Dovetail Mill (taper-angle 30, stored negative)
+                { "a9972dfd-3d73-4a12-b135-b351ec087f86", Tuple.Create(10d, Enums.ToolAngleModes.Taper) },  // Tapered Mill (10 deg side taper)
+                { "cbbe8505-1358-4a65-a7d6-c75dc40389fb", Tuple.Create(5d, Enums.ToolAngleModes.Taper) },   // Tapered Mill (5 deg side taper)
+            };
+
+            foreach (var kv in expected)
+            {
+                var tool = testData.Database.Tools.FirstOrDefault(t => t.Guid == kv.Key);
+                if (tool == null)
+                    throw new Exception($"Test tool not found in database by guid '{kv.Key}'");
+
+                if (tool.Toolangle_mode != kv.Value.Item2)
+                    throw new Exception($"Tool '{kv.Key}' has angle mode {tool.Toolangle_mode}, expected {kv.Value.Item2}");
+
+                if (!AreClose(tool.Toolangle, kv.Value.Item1))
+                    throw new Exception($"Tool '{kv.Key}' imported Toolangle {tool.Toolangle}, expected {kv.Value.Item1} " +
+                                        "(angle must be referenced from the vertical tool axis, swindex/HSMAdvisor#140)");
+
+                // The stored Leadangle must be valid for the calculator (0, 180]
+                if (tool.Leadangle <= 0d || tool.Leadangle > 180d)
+                    throw new Exception($"Tool '{kv.Key}' has out-of-range Leadangle {tool.Leadangle} (expected within (0, 180])");
+            }
+
+            // Cross-check every imported tool that carries a source taper angle:
+            // Toolangle must match the source taper-angle for Taper-mode tools,
+            // and 2*(90 - source) == source (i.e. Toolangle == source) for Tip-mode tools.
+            foreach (var originalTool in testData.OriginalData.tool.Where(t => t.body != null && !string.IsNullOrEmpty(t.body.taperangle)))
+            {
+                var imported = testData.Database.Tools.FirstOrDefault(t => t.Guid == originalTool.guid);
+                if (imported == null) continue;
+
+                var sourceAngle = Parse.ToDouble(originalTool.body.taperangle);
+                if (imported.Toolangle_mode == Enums.ToolAngleModes.Taper)
+                {
+                    // dovetail mills: HSMWorks stores the side taper angle, HSMAdvisor stores it negative
+                    var expectedToolangle = originalTool.type == "dovetail mill" ? -sourceAngle : sourceAngle;
+                    if (!AreClose(imported.Toolangle, expectedToolangle))
+                        throw new Exception($"Tool '{originalTool.guid}' ({originalTool.type}) Toolangle {imported.Toolangle}, expected {expectedToolangle} from source taper-angle {sourceAngle}");
+                }
+                else if (imported.Toolangle_mode == Enums.ToolAngleModes.Tip)
+                {
+                    if (!AreClose(imported.Toolangle, sourceAngle))
+                        throw new Exception($"Tool '{originalTool.guid}' ({originalTool.type}) Toolangle {imported.Toolangle}, expected {sourceAngle} (included angle from source taper-angle)");
+                }
+            }
+
+            Console.WriteLine($"PASS ({expected.Count} known tools verified)");
+        }
+
+        /// <summary>
+        /// Round-trip test: HSMLib tool -> Tool -> HSMLib tool must preserve the source
+        /// taper-angle exactly, for every angle-carrying tool type. This catches the
+        /// horizontal/vertical reference complementation bug (swindex/HSMAdvisor#140)
+        /// on both the import and export paths.
+        /// </summary>
+        [TestMethod]
+        public void TestTaperAngleRoundTrip()
+        {
+            Console.Write("Testing taper angle round-trip... ");
+
+            EnsureTestDataLoaded();
+
+            int checkedTools = 0;
+            foreach (var testData in _testDataCache.Values)
+            {
+                foreach (var originalTool in testData.OriginalData.tool)
+                {
+                    if (originalTool.body == null || string.IsNullOrEmpty(originalTool.body.taperangle))
+                        continue;
+
+                    var sourceAngle = Parse.ToDouble(originalTool.body.taperangle);
+                    if (sourceAngle == 0d)
+                        continue;
+
+                    var imported = Converter.ToTool(originalTool);
+                    var exported = Converter.FromTool(imported);
+
+                    var exportedAngle = Parse.ToDouble(exported.body?.taperangle);
+                    if (!AreClose(exportedAngle, sourceAngle))
+                        throw new Exception($"Round-trip changed taper-angle of tool '{originalTool.productid}' ({originalTool.type}) in {testData.FileName}: " +
+                                            $"source {sourceAngle}, exported {exportedAngle}");
+
+                    // And the imported Tool must keep reporting the same angle via Toolangle
+                    var expectedToolangle = originalTool.type == "dovetail mill" ? -sourceAngle : sourceAngle;
+                    if (!AreClose(imported.Toolangle, expectedToolangle))
+                        throw new Exception($"Imported Toolangle {imported.Toolangle} != source {expectedToolangle} for tool '{originalTool.productid}' ({originalTool.type}) in {testData.FileName}");
+
+                    checkedTools++;
+                }
+            }
+
+            if (checkedTools == 0)
+                throw new Exception("No taper-angle tools found in test data - test data may be incomplete");
+
+            Console.WriteLine($"PASS ({checkedTools} tools round-tripped)");
+        }
+
+        /// <summary>
+        /// Same round-trip as <see cref="TestTaperAngleRoundTrip"/> but with the tool's
+        /// Aux_data cleared before export. With Aux_data present, FromTool deserializes
+        /// the original tool from that XML and SetIfChanged skips fields whose values are
+        /// unchanged, so the taper-angle would be copied through verbatim instead of being
+        /// recomputed. Nulling Aux_data forces originalTool == null, so the full switch-case
+        /// conversion path (including ToHsmWorksAngle from Leadangle) is actually exercised.
+        /// </summary>
+        [TestMethod]
+        public void TestTaperAngleRoundTripNoAuxData()
+        {
+            Console.Write("Testing taper angle round-trip (no Aux_data, real conversion)... ");
+
+            EnsureTestDataLoaded();
+
+            int checkedTools = 0;
+            foreach (var testData in _testDataCache.Values)
+            {
+                foreach (var originalTool in testData.OriginalData.tool)
+                {
+                    if (originalTool.body == null || string.IsNullOrEmpty(originalTool.body.taperangle))
+                        continue;
+
+                    var sourceAngle = Parse.ToDouble(originalTool.body.taperangle);
+                    if (sourceAngle == 0d)
+                        continue;
+
+                    var imported = Converter.ToTool(originalTool);
+                    imported.Aux_data = null; // force FromTool to rebuild via real conversion
+                    var exported = Converter.FromTool(imported);
+
+                    var exportedAngle = Parse.ToDouble(exported.body?.taperangle);
+                    if (!AreClose(exportedAngle, sourceAngle))
+                        throw new Exception($"Round-trip (no Aux_data) changed taper-angle of tool '{originalTool.productid}' ({originalTool.type}) in {testData.FileName}: " +
+                                            $"source {sourceAngle}, exported {exportedAngle}");
+
+                    checkedTools++;
+                }
+            }
+
+            if (checkedTools == 0)
+                throw new Exception("No taper-angle tools found in test data - test data may be incomplete");
+
+            Console.WriteLine($"PASS ({checkedTools} tools round-tripped)");
+        }
+
+        /// <summary>
+        /// Round-trip for a user-modified angle: when the user changes the tool angle in
+        /// HSMAdvisor (via Toolangle), the exported HSMLib taper-angle must carry the new
+        /// value - not a complemented one.
+        /// </summary>
+        [TestMethod]
+        public void TestTaperAngleModifiedExport()
+        {
+            Console.Write("Testing modified angle export... ");
+
+            EnsureTestDataLoaded();
+
+            var testData = _testDataCache["Milling Tools (Inch).hsmlib"];
+
+            // 45 deg chamfer mill
+            var originalTool = testData.OriginalData.tool.First(t => t.guid == "39052c62-d9a2-42d4-b7c0-5f11cfcb7ffd");
+            var tool = Converter.ToTool(originalTool);
+            tool.Toolangle = 90d; // user doubles the included angle
+            var exported = Converter.FromTool(tool);
+            var exportedAngle = Parse.ToDouble(exported.body?.taperangle);
+            if (!AreClose(exportedAngle, 90d))
+                throw new Exception($"Modified chamfer mill exported taper-angle {exportedAngle}, expected 90");
+
+            // 10 deg tapered mill (Taper mode)
+            var originalTaper = testData.OriginalData.tool.First(t => t.guid == "a9972dfd-3d73-4a12-b135-b351ec087f86");
+            var taperTool = Converter.ToTool(originalTaper);
+            taperTool.Toolangle = 15d;
+            var exportedTaper = Converter.FromTool(taperTool);
+            var exportedTaperAngle = Parse.ToDouble(exportedTaper.body?.taperangle);
+            if (!AreClose(exportedTaperAngle, 15d))
+                throw new Exception($"Modified tapered mill exported taper-angle {exportedTaperAngle}, expected 15");
+
+            // Dovetail mill must export a positive angle (HSMAdvisor stores it negative)
+            var originalDovetail = testData.OriginalData.tool.First(t => t.guid == "8edd1c42-315a-44ca-9303-7c928412ec70");
+            var dovetail = Converter.ToTool(originalDovetail);
+            if (!AreClose(dovetail.Toolangle, -45d))
+                throw new Exception($"Dovetail mill imported Toolangle {dovetail.Toolangle}, expected -45");
+            var exportedDovetail = Converter.FromTool(dovetail);
+            var exportedDovetailAngle = Parse.ToDouble(exportedDovetail.body?.taperangle);
+            if (!AreClose(exportedDovetailAngle, 45d))
+                throw new Exception($"Dovetail mill exported taper-angle {exportedDovetailAngle}, expected 45 (HSMWorks stores positive)");
+
+            Console.WriteLine("PASS");
+        }
+
+        private static bool AreClose(double a, double b, double tolerance = 0.0001d)
+        {
+            return Math.Abs(a - b) < tolerance;
         }
 
         /// <summary>

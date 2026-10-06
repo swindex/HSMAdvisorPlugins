@@ -104,7 +104,10 @@ namespace ExchangeHSMWorks
                 ret.Flute_N = Parse.ToInteger(t.body.numberofflutes);
                 ret.Helix_angle = -1;
                 ret.Toolangle_mode = Enums.ToolAngleModes.Taper;
-                ret.Leadangle = Parse.ToDouble(t.body.taperangle);
+                // HSMWorks "taper-angle" is the side/flute taper measured from the tool axis
+                // (vertical reference). Store it via Toolangle so HSMAdvisor keeps the same
+                // value in Taper mode (Leadangle = 90 - taper). See swindex/HSMAdvisor#140.
+                ret.Toolangle = Parse.ToDouble(t.body.taperangle);
             }
 
             //set default values
@@ -154,28 +157,29 @@ namespace ExchangeHSMWorks
                         }
                     ret.Diameter = ret.Shank_Dia;
                     ret.Shank_Dia = Parse.ToDouble(t.body?.diameter);
-                    ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
                     break;
 
                 case "center drill":
                 case "drill":
                     ret.Tool_type_id = Enums.ToolTypes.JobberTwistDrill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // Drill point angle is the included tip angle; store via Toolangle. #140
+                    ret.Toolangle = Parse.ToDouble(t.body?.taperangle);
 
                     ret.Flute_N = 2;
                     break;
                 case "spot drill":
                     ret.Tool_type_id = Enums.ToolTypes.SpotDrill;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // Spot drill point angle is the included tip angle; store via Toolangle. #140
+                    ret.Toolangle = Parse.ToDouble(t.body?.taperangle);
                     ret.Flute_N = 2;
                     break;
                 case "counter bore":
                     ret.Tool_type_id = Enums.ToolTypes.Counterbore;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // Counterbore point angle is the included tip angle; store via Toolangle. #140
+                    ret.Toolangle = Parse.ToDouble(t.body?.taperangle);
                     break;
                 case "counter sink":
                     ret.Tool_type_id = Enums.ToolTypes.CounterSink;
@@ -191,7 +195,8 @@ namespace ExchangeHSMWorks
                         }
                     ret.Diameter = ret.Shank_Dia;
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
-                    ret.Leadangle = Parse.ToDouble(t.body?.taperangle);
+                    // Counter sink point angle is the included tip angle; store via Toolangle. #140
+                    ret.Toolangle = Parse.ToDouble(t.body?.taperangle);
                     break;
                 case "tap right hand":
                     ret.Tool_type_id = Enums.ToolTypes.Tap;
@@ -420,7 +425,11 @@ namespace ExchangeHSMWorks
             SetIfChanged(originalTool, srcTool.Shoulder_Len, originalTool?.Shoulder_Len ?? 0, value => EnsureBody(ret).shoulderlength = Parse.ToString(value));
             SetIfChanged(originalTool, srcTool.Shank_Dia, originalTool?.Shank_Dia ?? 0, value => EnsureBody(ret).shaftdiameter = Parse.ToString(value));
             SetIfChanged(originalTool, srcTool.Flute_N, originalTool?.Flute_N ?? 0, value => EnsureBody(ret).numberofflutes = Parse.ToString(value));
-            SetIfChanged(originalTool, srcTool.Leadangle, originalTool?.Leadangle ?? 0, value => EnsureBody(ret).taperangle = Parse.ToString(90 - value));
+            // Export the tool angle in the same reference HSMWorks uses (side taper from the
+            // tool axis / included tip angle). Leadangle is the stored field: the angle from
+            // the tool axis to the XY plane (90 for a straight end mill), so convert it back
+            // to the HSMWorks reference per angle mode. See swindex/HSMAdvisor#140
+            SetIfChanged(originalTool, srcTool.Leadangle, originalTool?.Leadangle ?? 0, value => EnsureBody(ret).taperangle = Parse.ToString(srcTool.ToolAngleTaper));
 
             if (originalTool == null || srcTool.Tool_type_id != originalTool.Tool_type_id || string.IsNullOrEmpty(ret.type))
             {
@@ -428,7 +437,12 @@ namespace ExchangeHSMWorks
                 {
                     case Enums.ToolTypes.SolidEndMill:
                         ret.type = "flat end mill";
+                        if (srcTool.ToolAngleTaper < 0)
+                        {
+                            ret.type = "dovetail mill";
+                            EnsureBody(ret).taperangle = Parse.ToString(-srcTool.ToolAngleTaper);
 
+                        }
                         break;
                     case Enums.ToolTypes.ThreadMill:
                         ret.type = "form mill";
@@ -450,22 +464,25 @@ namespace ExchangeHSMWorks
                         ret.type = "chamfer mill";
                         EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
                         EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
-
                         break;
                     //case "center drill":
                     case Enums.ToolTypes.JobberTwistDrill:
                         ret.type = "drill";
+                        EnsureBody(ret).taperangle = Parse.ToString(srcTool.ToolAngleTip);
                         break;
                     case Enums.ToolTypes.SpotDrill:
                         ret.type = "spot drill";
+                        EnsureBody(ret).taperangle = Parse.ToString(srcTool.ToolAngleTip);
                         break;
                     case Enums.ToolTypes.CounterSink:
                         ret.type = "counter sink";
                         EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
                         EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
+                        EnsureBody(ret).taperangle = Parse.ToString(srcTool.ToolAngleTip);
                         break;
                     case Enums.ToolTypes.Counterbore:
                         ret.type = "counter bore";
+                        EnsureBody(ret).taperangle = Parse.ToString(srcTool.ToolAngleTip);
                         break;
                     //"tap left hand":
                     case Enums.ToolTypes.Tap:
