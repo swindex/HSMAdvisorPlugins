@@ -147,6 +147,7 @@ namespace ExchangeHSMWorks
 
                     ret.Diameter = Parse.ToDouble(t.body?.tipdiameter);
                     if (ret.Diameter <= 0)
+                    {
                         if (ret.Diameter_m)
                         {
                             ret.Diameter = 0.0010 * 25.4;
@@ -155,7 +156,7 @@ namespace ExchangeHSMWorks
                         {
                             ret.Diameter = 0.001;
                         }
-                    ret.Diameter = ret.Shank_Dia;
+                    }
                     ret.Shank_Dia = Parse.ToDouble(t.body?.diameter);
                     break;
 
@@ -185,6 +186,7 @@ namespace ExchangeHSMWorks
                     ret.Tool_type_id = Enums.ToolTypes.CounterSink;
                     ret.Diameter = Parse.ToDouble(t.body?.tipdiameter);
                     if (ret.Diameter <= 0)
+                    {
                         if (ret.Diameter_m)
                         {
                             ret.Diameter = 0.0010 * 25.4;
@@ -193,7 +195,7 @@ namespace ExchangeHSMWorks
                         {
                             ret.Diameter = 0.001;
                         }
-                    ret.Diameter = ret.Shank_Dia;
+                    }
                     ret.Toolangle_mode = Enums.ToolAngleModes.Tip;
                     // Counter sink point angle is the included tip angle; store via Toolangle. #140
                     ret.Toolangle = Parse.ToDouble(t.body?.taperangle);
@@ -462,7 +464,8 @@ namespace ExchangeHSMWorks
                     case Enums.ToolTypes.VbitEngraver:
                     case Enums.ToolTypes.ChamferMill:
                         ret.type = "chamfer mill";
-                        EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
+                        if (String.IsNullOrEmpty(EnsureBody(ret).tipdiameter))
+                            EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
                         EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
                         break;
                     //case "center drill":
@@ -476,7 +479,8 @@ namespace ExchangeHSMWorks
                         break;
                     case Enums.ToolTypes.CounterSink:
                         ret.type = "counter sink";
-                        EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
+                        if (String.IsNullOrEmpty(EnsureBody(ret).tipdiameter))
+                            EnsureBody(ret).tipdiameter = Parse.ToString(srcTool.Diameter);
                         EnsureBody(ret).diameter = Parse.ToString(srcTool.Shank_Dia);
                         EnsureBody(ret).taperangle = Parse.ToString(srcTool.ToolAngleTip);
                         break;
