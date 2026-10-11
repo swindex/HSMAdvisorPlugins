@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<tool-library xmlns="http://www.hsmworks.com/xml/2004/cnc/tool-library" version="1.0">
+
+  <tool guid="A1B2C3D4-0101-4101-8101-000000000101" type="circle segment lens" unit="inches" version="1.5">
+    <description>0.5000 (1/2) DIA Circle Segment Lens Mill, 1.25 R</description>
+    <manufacturer>TEST TOOL</manufacturer>
+    <product-id>LENS-0500</product-id>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="carbide"/>
+    <body body-length="1.25" coolant-support="no" corner-radius="1.25" diameter="0.5" flute-length="0.25" number-of-flutes="3" overall-length="3" shaft-diameter="0.25" shoulder-length="0.25"/>
+    <motion clockwise="yes" cutting-feedrate="40" entry-feedrate="40" exit-feedrate="40" feed-mode="per-minute" plunge-feedrate="20" ramp-feedrate="20" ramp-spindle-rpm="8000" retract-feedrate="0" spindle-rpm="8000"/>
+    <presets>
+      <preset description="" id="{33333333-3333-3333-3333-333333333333}" name="Default Preset" tool_coolant="flood" tool_feedCutting="40" tool_feedEntry="40" tool_feedExit="40" tool_feedPlunge="20" tool_feedRamp="20" tool_rampSpindleSpeed="8000" tool_spindleSpeed="8000"/>
+    </presets>
+  </tool>
+
+  <tool guid="A1B2C3D4-0102-4102-8102-000000000102" type="radius mill" unit="inches" version="1.5">
+    <description>0.0625 (1/16) x 0.030 Radius Mill</description>
+    <manufacturer>TEST TOOL</manufacturer>
+    <product-id>RADIUS-0062</product-id>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="carbide"/>
+    <body body-length="0.5" coolant-support="no" corner-radius="0.03" diameter="0.0625" flute-length="0.03" number-of-flutes="3" overall-length="1.5" shaft-diameter="0.125" shoulder-length="0.03"/>
+    <motion clockwise="yes" cutting-feedrate="39.370078740157" entry-feedrate="39.370078740157" exit-feedrate="39.370078740157" feed-mode="per-minute" plunge-feedrate="13.123359580052" ramp-feedrate="13.123359580052" ramp-spindle-rpm="5000" retract-feedrate="0" spindle-rpm="5000"/>
+    <presets>
+      <preset description="" id="{44444444-4444-4444-4444-444444444444}" name="Default Preset" tool_coolant="flood" tool_feedCutting="1000" tool_feedEntry="1000" tool_feedExit="1000" tool_feedPlunge="333.33" tool_feedRamp="333.33" tool_rampSpindleSpeed="5000" tool_spindleSpeed="5000"/>
+    </presets>
+  </tool>
+
+  <tool guid="A1B2C3D4-0103-4103-8103-000000000103" type="bull nose end mill" unit="inches" version="1.5">
+    <description>0.2500 (1/4) Bullnose Endmill, 0.062 R</description>
+    <manufacturer>TEST TOOL</manufacturer>
+    <product-id>BULL-0250</product-id>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="carbide"/>
+    <body body-length="1.5" coolant-support="no" corner-radius="0.062" diameter="0.25" flute-length="1" number-of-flutes="4" overall-length="3" shaft-diameter="0.25" shoulder-length="1"/>
+    <motion clockwise="yes" cutting-feedrate="40" entry-feedrate="40" exit-feedrate="40" feed-mode="per-minute" plunge-feedrate="20" ramp-feedrate="20" ramp-spindle-rpm="8000" retract-feedrate="0" spindle-rpm="8000"/>
+    <presets>
+      <preset description="" id="{55555555-5555-5555-5555-555555555555}" name="Default Preset" tool_coolant="flood" tool_feedCutting="40" tool_feedEntry="40" tool_feedExit="40" tool_feedPlunge="20" tool_feedRamp="20" tool_rampSpindleSpeed="8000" tool_spindleSpeed="8000"/>
+    </presets>
+  </tool>
+
+</tool-library>

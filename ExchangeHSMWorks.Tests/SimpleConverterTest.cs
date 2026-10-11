@@ -98,6 +98,7 @@ namespace ExchangeHSMWorks.Tests
             TestTaperAngleModifiedExport();
             TestMaterialConversion();
             TestReamerImportAndProbeHandling();
+            TestLensAndCornerRoundingHandling();
             TestCapabilities();
 
             // Demonstrate the side-by-side comparison functionality
@@ -711,6 +712,104 @@ namespace ExchangeHSMWorks.Tests
                 throw new Exception($"Reamer flute count {reamerImported.Flute_N}, expected 4");
 
             Console.WriteLine("PASS (reamer mapped, probe preserved unmapped)");
+        }
+
+        /// <summary>
+        /// Lens (circle segment lens) and radius mill support:
+        ///  - "circle segment lens" imports as Enums.ToolTypes.LensEndMill (previously fell through
+        ///    to the unmapped Tool_type_id 0 default), with Corner_rad carrying the profile arc radius
+        ///  - "radius mill" imports as Enums.ToolTypes.CornerRounding (previously a plain SolidEndMill)
+        ///  - bull nose end mill keeps its existing SolidEndMill + Corner_rad handling unchanged
+        ///  - both new types round-trip losslessly with Aux_data preserved, and re-export to their
+        ///    original hsmlib type when converted from scratch (Aux_data cleared)
+        /// </summary>
+        [TestMethod]
+        public void TestLensAndCornerRoundingHandling()
+        {
+            Console.Write("Testing lens and corner-rounding handling... ");
+
+            EnsureTestDataLoaded();
+
+            if (!_testDataCache.ContainsKey("LensAndCornerRounding.hsmlib"))
+                throw new Exception("Test fixture LensAndCornerRounding.hsmlib not loaded");
+
+            var testData = _testDataCache["LensAndCornerRounding.hsmlib"];
+
+            // Known-type detection
+            if (!Converter.IsKnownHSMWorksType("circle segment lens"))
+                throw new Exception("'circle segment lens' type should be a known HSMWorks type");
+            if (!Converter.IsKnownHSMWorksType("radius mill"))
+                throw new Exception("'radius mill' type should be a known HSMWorks type");
+
+            // Lens mill imports as Enums.ToolTypes.LensEndMill with arc radius in Corner_rad
+            var lensOriginal = testData.OriginalData.tool.First(t => t.type == "circle segment lens");
+            var lensImported = testData.Database.Tools.FirstOrDefault(t => t.Guid == lensOriginal.guid);
+            if (lensImported == null)
+                throw new Exception("Lens mill was not imported from fixture");
+            if ((Enums.ToolTypes)lensImported.Tool_type_id != Enums.ToolTypes.LensEndMill)
+                throw new Exception($"Lens mill imported as Tool_type_id {lensImported.Tool_type_id}, expected LensEndMill ({(int)Enums.ToolTypes.LensEndMill})");
+            if (!AreClose(lensImported.Diameter, 0.5d))
+                throw new Exception($"Lens mill diameter {lensImported.Diameter}, expected 0.5");
+            if (!AreClose(lensImported.Corner_rad, 1.25d))
+                throw new Exception($"Lens mill profile arc radius {lensImported.Corner_rad}, expected 1.25");
+
+            // Radius mill imports as Enums.ToolTypes.CornerRounding (not plain SolidEndMill)
+            var radiusOriginal = testData.OriginalData.tool.First(t => t.type == "radius mill");
+            var radiusImported = testData.Database.Tools.FirstOrDefault(t => t.Guid == radiusOriginal.guid);
+            if (radiusImported == null)
+                throw new Exception("Radius mill was not imported from fixture");
+            if ((Enums.ToolTypes)radiusImported.Tool_type_id != Enums.ToolTypes.CornerRounding)
+                throw new Exception($"Radius mill imported as Tool_type_id {radiusImported.Tool_type_id}, expected CornerRounding ({(int)Enums.ToolTypes.CornerRounding})");
+            if (!AreClose(radiusImported.Diameter, 0.0625d))
+                throw new Exception($"Radius mill diameter {radiusImported.Diameter}, expected 0.0625");
+            if (!AreClose(radiusImported.Corner_rad, 0.03d))
+                throw new Exception($"Radius mill corner radius {radiusImported.Corner_rad}, expected 0.03");
+
+            // Bull nose end mill must keep its existing behavior (SolidEndMill + Corner_rad)
+            var bullOriginal = testData.OriginalData.tool.First(t => t.type == "bull nose end mill");
+            var bullImported = testData.Database.Tools.FirstOrDefault(t => t.Guid == bullOriginal.guid);
+            if (bullImported == null)
+                throw new Exception("Bull nose mill was not imported from fixture");
+            if ((Enums.ToolTypes)bullImported.Tool_type_id != Enums.ToolTypes.SolidEndMill)
+                throw new Exception($"Bull nose mill imported as Tool_type_id {bullImported.Tool_type_id}, expected SolidEndMill ({(int)Enums.ToolTypes.SolidEndMill})");
+            if (!AreClose(bullImported.Corner_rad, 0.062d))
+                throw new Exception($"Bull nose corner radius {bullImported.Corner_rad}, expected 0.062");
+
+            // Lossless Aux_data round-trip for every fixture tool (covers the new types too)
+            foreach (var originalTool in testData.OriginalData.tool)
+            {
+                var converted = Converter.ToTool(originalTool);
+                var exported = Converter.FromTool(converted);
+
+                var expectedXml = Serializer.ToXML(originalTool, "UTF-16");
+                var actualXml = Serializer.ToXML(exported, "UTF-16");
+
+                if (!string.Equals(expectedXml, actualXml, StringComparison.Ordinal))
+                    throw new Exception($"ToTool/FromTool round-trip changed tool '{originalTool.productid}' in {testData.FileName}.");
+            }
+
+            // Fresh conversion (no Aux_data) must recreate the correct hsmlib types and geometry
+            var lensNoAux = Converter.ToTool(lensOriginal);
+            lensNoAux.Aux_data = null;
+            var lensExported = Converter.FromTool(lensNoAux);
+            if (lensExported.type != "circle segment lens")
+                throw new Exception($"Lens mill exported as HSMWorks type '{lensExported.type}', expected 'circle segment lens'");
+            if (!AreClose(Parse.ToDouble(lensExported.body?.diameter), 0.5d))
+                throw new Exception($"Lens mill exported diameter {lensExported.body?.diameter}, expected 0.5");
+            if (!AreClose(Parse.ToDouble(lensExported.body?.cornerradius), 1.25d))
+                throw new Exception($"Lens mill exported corner-radius {lensExported.body?.cornerradius}, expected 1.25");
+
+            var radiusNoAux = Converter.ToTool(radiusOriginal);
+            radiusNoAux.Aux_data = null;
+            var radiusExported = Converter.FromTool(radiusNoAux);
+            if (radiusExported.type != "radius mill")
+                throw new Exception($"Radius mill exported as HSMWorks type '{radiusExported.type}', expected 'radius mill'");
+            if (!AreClose(Parse.ToDouble(radiusExported.body?.diameter), 0.0625d))
+                throw new Exception($"Radius mill exported diameter {radiusExported.body?.diameter}, expected 0.0625");
+            if (!AreClose(Parse.ToDouble(radiusExported.body?.cornerradius), 0.03d))
+                throw new Exception($"Radius mill exported corner-radius {radiusExported.body?.cornerradius}, expected 0.03");
+
+            Console.WriteLine("PASS (lens -> LensEndMill, radius mill -> CornerRounding, bull nose unchanged)");
         }
 
         [TestMethod]

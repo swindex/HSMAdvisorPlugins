@@ -91,6 +91,7 @@ namespace ExchangeHSMWorks
                 case "turning grooving":
                 case "dovetail mill":
                 case "reamer":
+                case "circle segment lens":
                     return true;
                 default:
                     // covers non-cutting types such as probes too
@@ -177,9 +178,16 @@ namespace ExchangeHSMWorks
                 case "flat end mill":
                 case "bull nose end mill":
                 case "tapered mill":
-                case "radius mill":
                 case "form mill":
                     //Tool_type_id = Convert.ToInt32(Enums.ToolTypes.SolidEndMill),
+                    break;
+                case "radius mill":
+                    // Corner-rounding tool. Fusion stores the pilot/core cutting width in body
+                    // diameter with the corner profile expressed by corner-radius; HSMAdvisor's
+                    // CornerRounding type uses the same reference (the calculators add the corner
+                    // radii - ApplyCornerRoundingGeometryDefaults), so mapping it here engages
+                    // the dedicated corner-rounding engagement/DOC models.
+                    ret.Tool_type_id = Enums.ToolTypes.CornerRounding;
                     break;
                 case "thread mill":
                     ret.Thread_pitch = Parse.ToDouble(t.body?.threadpitch);
@@ -316,6 +324,12 @@ namespace ExchangeHSMWorks
                     break;
                 case "reamer":
                     ret.Tool_type_id = Enums.ToolTypes.Reamer;
+                    break;
+                case "circle segment lens":
+                    // Lens (circle-segment) mill. HSMAdvisor models it with ToolTypes.LensEndMill:
+                    // Diameter is the maximum cutting diameter and Corner_rad is the profile arc
+                    // radius; effective diameter grows with DOC (Calc_Mill.CalculateLensEffectiveDiameter).
+                    ret.Tool_type_id = Enums.ToolTypes.LensEndMill;
                     break;
                 default:
                     // Unknown HSMWorks tool types (e.g. probes) are imported with an
@@ -517,13 +531,35 @@ namespace ExchangeHSMWorks
                 switch ((Enums.ToolTypes)srcTool.Tool_type_id)
                 {
                     case Enums.ToolTypes.SolidEndMill:
-                        ret.type = "flat end mill";
+                        // A corner radius on a plain end mill is bull-nose geometry; HSMAdvisor's
+                        // Diameter already carries the full cutting diameter, same reference as
+                        // Fusion's bull nose body diameter, so write the corner-radius through
+                        // unchanged (the common SetIfChanged above) and keep bull nose semantics.
+                        if (srcTool.Corner_rad > 0)
+                            ret.type = "bull nose end mill";
+                        else
+                            ret.type = "flat end mill";
+
                         if (srcTool.ToolAngleTaper < 0)
                         {
                             ret.type = "dovetail mill";
                             EnsureBody(ret).taperangle = Parse.ToString(-srcTool.ToolAngleTaper);
 
                         }
+                        break;
+                    case Enums.ToolTypes.CornerRounding:
+                        // Corner-rounding tool. HSMAdvisor's CornerRounding Diameter uses the same
+                        // reference as Fusion's radius-mill body diameter (the pilot/core width; the
+                        // calculators add the corner radii themselves - see ApplyCornerRoundingGeometryDefaults),
+                        // so body diameter and corner-radius both round-trip unchanged via the
+                        // common SetIfChanged calls above.
+                        ret.type = "radius mill";
+                        break;
+                    case Enums.ToolTypes.LensEndMill:
+                        // Lens (circle-segment) mill. Both Diameter (max cutting diameter) and
+                        // Corner_rad (profile arc radius) map straight onto body diameter and
+                        // corner-radius; Fusion derives the rest of the profile geometry itself.
+                        ret.type = "circle segment lens";
                         break;
                     case Enums.ToolTypes.ThreadMill:
                         ret.type = "form mill";
@@ -642,6 +678,32 @@ namespace ExchangeHSMWorks
                     SetIfChanged(originalTool, srcTool.Thread_pitch, originalTool.Thread_pitch, value => EnsureBody(ret).threadpitch = Parse.ToString(value));
                     break;
 
+                // Corner geometry changes can move a tool between flat and corner-rounding shapes.
+                // When the user adds a corner radius to a plain end mill, promote it to bull nose;
+                // when the radius is removed from a bull nose, demote it back to flat. Geometry
+                // values themselves are already synced by the common SetIfChanged calls above.
+                case Enums.ToolTypes.SolidEndMill:
+                    if (!AreEqual(srcTool.Corner_rad, originalTool.Corner_rad))
+                    {
+                        if (srcTool.Corner_rad > 0 && ret.type == "flat end mill")
+                            ret.type = "bull nose end mill";
+                        else if (srcTool.Corner_rad <= 0 && ret.type == "bull nose end mill")
+                            ret.type = "flat end mill";
+                    }
+                    break;
+
+                case Enums.ToolTypes.CornerRounding:
+                    // Radius-mill geometry (body diameter + corner-radius) is already synced by the
+                    // common SetIfChanged calls above - no additional type-specific handling required.
+                    break;
+
+                case Enums.ToolTypes.LensEndMill:
+                    // Lens profile arc radius maps straight onto body corner-radius and is already
+                    // synced above. Without a radius the lens shape collapses to a plain end mill.
+                    if (srcTool.Corner_rad <= 0 && ret.type == "circle segment lens")
+                        ret.type = "flat end mill";
+                    break;
+
                 case Enums.ToolTypes.TurningProfiling:
                 case Enums.ToolTypes.BoringBar:
                 case Enums.ToolTypes.TurningGrooving:
@@ -650,8 +712,10 @@ namespace ExchangeHSMWorks
                     SetIfChanged(originalTool, srcTool.Corner_rad, originalTool.Corner_rad, value => EnsureInsert(ret).cornerradius = Parse.ToString(value));
                     break;
 
-                // Reamer geometry uses only the generic body fields already synced by the
-                // common SetIfChanged calls above - no type-specific handling required.
+                // Radius mill, circle segment lens and reamer geometry use only the generic body
+                // fields already synced by the common SetIfChanged calls above (body diameter,
+                // corner-radius, etc.) - no type-specific handling required. Lens Corner_rad is the
+                // profile arc radius and writes straight back to corner-radius.
             }
         }
 

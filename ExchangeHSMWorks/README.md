@@ -73,11 +73,15 @@ The plugin provides comprehensive mapping between HSMWorks and HSMAdvisor tool t
 |---------------|-----------------|
 | flat end mill | SolidEndMill |
 | ball end mill | SolidBallMill |
-| bull nose end mill | SolidBallMill |
+| bull nose end mill | SolidEndMill (with Corner_rad) |
+| radius mill | CornerRounding |
+| circle segment lens | LensEndMill |
 | face mill | IndexedFaceMill |
 | slot mill | SolidEndMill |
 | chamfer mill | ChamferMill |
 | thread mill | ThreadMill |
+
+Lens and corner-rounding tools: a `radius mill` imports as `CornerRounding` (body diameter is the pilot/core width, `corner-radius` maps to `Corner_rad`, matching HSMAdvisor's corner-rounding geometry reference). A `circle segment lens` (Fusion circle-segment mill) imports as `LensEndMill` with `Corner_rad` carrying the profile arc radius. On export, an HSMAdvisor `SolidEndMill` that has a corner radius writes back as `bull nose end mill`, and `CornerRounding`/`LensEndMill` tools export as `radius mill`/`circle segment lens`. See [docs/changes/2026-10-10-lens-corner-rounding-endmills.md](../docs/changes/2026-10-10-lens-corner-rounding-endmills.md).
 
 ### Drilling Tools
 
@@ -248,6 +252,7 @@ Sample .hsmlib files are included in `test-data/`:
 - `Harvey Tool-Specialty Profiles.hsmlib`
 - `Hole Making Tools (Inch).hsmlib`
 - `ReamersAndProbes.hsmlib` - reamer/probe handling fixture (issue #6)
+- `LensAndCornerRounding.hsmlib` - lens/radius/bull nose mill handling fixture
 
 ### Manual Testing
 
