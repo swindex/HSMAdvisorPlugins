@@ -107,6 +107,12 @@ The plugin provides comprehensive mapping between HSMWorks and HSMAdvisor tool t
 | form mill | HPEndMill |
 | engraving tool | VbitEngraver |
 
+Taps take their flute count from `number-of-teeth`, falling back to `number-of-flutes` when the teeth attribute is missing (some libraries store tap flutes there). Reamers map both on import (`type="reamer"`) and export. See swindex/HSMAdvisorPlugins#6.
+
+### Unknown / Non-Cutting Types (Probes, etc.)
+
+Tools whose HSMWorks `type` has no HSMAdvisor mapping (e.g. `probe`) are **still imported** with an unmapped `Tool_type_id` so no data is lost - their full source XML is preserved in the `Aux_data` field and round-trips back unchanged on export. HSMAdvisor can display them as unknown tools and they can be deleted manually if desired (they carry no feed/speed). Feed/speed presets are only applied to recognized cutting-tool types.
+
 ## Advanced Features
 
 ### Data Preservation Pattern
@@ -240,6 +246,8 @@ Sample .hsmlib files are included in `test-data/`:
 - `Harvey Tool-End Mills.hsmlib`
 - `Harvey Tool-Holemaking and Threading.hsmlib`
 - `Harvey Tool-Specialty Profiles.hsmlib`
+- `Hole Making Tools (Inch).hsmlib`
+- `ReamersAndProbes.hsmlib` - reamer/probe handling fixture (issue #6)
 
 ### Manual Testing
 

@@ -97,6 +97,7 @@ namespace ExchangeHSMWorks.Tests
             TestTaperAngleRoundTripNoAuxData();
             TestTaperAngleModifiedExport();
             TestMaterialConversion();
+            TestReamerImportAndProbeHandling();
             TestCapabilities();
 
             // Demonstrate the side-by-side comparison functionality
@@ -195,7 +196,8 @@ namespace ExchangeHSMWorks.Tests
             // Add library
             database.AddLibrary(libraryName);
 
-            // Convert all tools
+            // Convert all tools. Unknown HSMWorks types (e.g. probes) are still imported,
+            // with their full source XML preserved in Aux_data to protect against data loss.
             originalData.tool.ForEach(srcTool =>
             {
                 var tool = Converter.ToTool(srcTool);
@@ -221,10 +223,6 @@ namespace ExchangeHSMWorks.Tests
                     });
                 }
             });
-
-            // Populate database cache for tool count validation
-            var originalToolCount = originalData.tool?.Count ?? 0;
-            var importedToolCount = database.Tools.Count;
 
             return new TestDataInfo
             {
@@ -350,7 +348,16 @@ namespace ExchangeHSMWorks.Tests
                     throw new Exception($"Some tools are missing GUIDs in {testData.FileName}");
                 }
 
-                var toolsWithEmptyNameID = testData.Database.Tools.Where(t => t.Tool_type_id == 0).ToList();
+                // Unknown HSMWorks types (probes etc.) are intentionally imported unmapped
+                // (Tool_type_id 0) so their data is not lost - only mapped types must resolve.
+                var knownTypeGuids = new HashSet<string>(
+                    testData.OriginalData.tool
+                        .Where(t => Converter.IsKnownHSMWorksType(t.type))
+                        .Select(t => t.guid ?? ""));
+
+                var toolsWithEmptyNameID = testData.Database.Tools
+                    .Where(t => t.Tool_type_id == 0 && knownTypeGuids.Contains(t.Guid ?? ""))
+                    .ToList();
                 if (toolsWithEmptyNameID.Any())
                 {
                     var firstTool = toolsWithEmptyNameID.First();
@@ -496,16 +503,26 @@ namespace ExchangeHSMWorks.Tests
 
             foreach (var testData in _testDataCache.Values)
             {
-                if (!testData.Database.Tools.All(t => t.Diameter > 0))
+                // Geometry checks apply to tools whose HSMWorks type maps to a real cutting
+                // tool. Unrecognized/non-cutting tools (probes etc.) are imported as-is for
+                // data preservation and have no meaningful cutting geometry. See #6.
+                var knownTypeGuids = new HashSet<string>(
+                    testData.OriginalData.tool
+                        .Where(t => Converter.IsKnownHSMWorksType(t.type))
+                        .Select(t => t.guid ?? ""));
+
+                var cuttingTools = testData.Database.Tools.Where(t => knownTypeGuids.Contains(t.Guid ?? "")).ToList();
+
+                if (!cuttingTools.All(t => t.Diameter > 0))
                     throw new Exception($"Some tools have non-positive diameter in {testData.FileName}");
 
-                if (!testData.Database.Tools.All(t => t.Flute_Len >= 0))
+                if (!cuttingTools.All(t => t.Flute_Len >= 0))
                     throw new Exception($"Some tools have negative flute length in {testData.FileName}");
 
-                if (!testData.Database.Tools.All(t => t.Stickout >= 0))
+                if (!cuttingTools.All(t => t.Stickout >= 0))
                     throw new Exception($"Some tools have negative stickout in {testData.FileName}");
 
-                if (!testData.Database.Tools.All(t => t.Flute_N > 0))
+                if (!cuttingTools.All(t => t.Flute_N > 0))
                     throw new Exception($"Some tools have no flutes in {testData.FileName}");
             }
 
@@ -578,6 +595,8 @@ namespace ExchangeHSMWorks.Tests
             {
                 foreach (var originalTool in testData.OriginalData.tool)
                 {
+                    // Even unrecognized types must round-trip unchanged - their raw XML is
+                    // preserved in Aux_data so nothing is lost on export. See #6.
                     var convertedTool = Converter.ToTool(originalTool);
                     var exportedTool = Converter.FromTool(convertedTool);
 
@@ -629,6 +648,69 @@ namespace ExchangeHSMWorks.Tests
                 throw new Exception("Reverse HSS material mapping failed");
 
             Console.WriteLine("PASS");
+        }
+
+        /// <summary>
+        /// Issue swindex/HSMAdvisorPlugins#6:
+        ///  - HSMWorks type "reamer" must import as Enums.ToolTypes.Reamer (previously fell
+        ///    through to the unmapped Tool_type_id 0 default)
+        ///  - unrecognized tool types (e.g. probes) are still imported, but remain unmapped
+        ///    and their full source XML is preserved so nothing is lost on export
+        /// </summary>
+        [TestMethod]
+        public void TestReamerImportAndProbeHandling()
+        {
+            Console.Write("Testing reamer mapping and probe handling... ");
+
+            EnsureTestDataLoaded();
+
+            if (!_testDataCache.ContainsKey("ReamersAndProbes.hsmlib"))
+                throw new Exception("Test fixture ReamersAndProbes.hsmlib not loaded");
+
+            var testData = _testDataCache["ReamersAndProbes.hsmlib"];
+
+            // Known-type detection
+            if (!Converter.IsKnownHSMWorksType("reamer"))
+                throw new Exception("'reamer' type should be a known HSMWorks type");
+            if (Converter.IsKnownHSMWorksType("probe"))
+                throw new Exception("'probe' type should NOT be a known HSMWorks type");
+            if (Converter.IsKnownHSMWorksType(null))
+                throw new Exception("null type should NOT be a known HSMWorks type");
+
+            // Reamer imports as Enums.ToolTypes.Reamer (not the unmapped Tool_type_id 0)
+            var reamerOriginal = testData.OriginalData.tool.First(t => t.type == "reamer");
+            var reamerImported = testData.Database.Tools.FirstOrDefault(t => t.Guid == reamerOriginal.guid);
+            if (reamerImported == null)
+                throw new Exception("Reamer was not imported from fixture");
+            if ((Enums.ToolTypes)reamerImported.Tool_type_id != Enums.ToolTypes.Reamer)
+                throw new Exception($"Reamer imported as Tool_type_id {reamerImported.Tool_type_id}, expected Reamer ({(int)Enums.ToolTypes.Reamer})");
+
+            // Probe is imported (no data loss) but stays unmapped, with its XML preserved
+            var probeOriginal = testData.OriginalData.tool.First(t => t.type == "probe");
+            var probeImported = testData.Database.Tools.FirstOrDefault(t => t.Guid == probeOriginal.guid);
+            if (probeImported == null)
+                throw new Exception("Probe tool should still be imported to protect against data loss");
+            if (probeImported.Tool_type_id != 0)
+                throw new Exception($"Probe imported with mapped Tool_type_id {probeImported.Tool_type_id}, expected unmapped 0");
+            if (string.IsNullOrEmpty(probeImported.Aux_data))
+                throw new Exception("Probe tool lost its source Aux_data");
+
+            // Both tools survive in the database - nothing is dropped on import
+            if (testData.Database.Tools.Count != testData.OriginalData.tool.Count)
+                throw new Exception($"Imported count {testData.Database.Tools.Count} should equal original count {testData.OriginalData.tool.Count}");
+
+            // Reamer must round-trip back to type="reamer"
+            var reamerExported = Converter.FromTool(reamerImported);
+            if (reamerExported.type != "reamer")
+                throw new Exception($"Reamer exported as HSMWorks type '{reamerExported.type}', expected 'reamer'");
+
+            // Reamer geometry mapped from generic body fields
+            if (!AreClose(reamerImported.Diameter, 0.25d))
+                throw new Exception($"Reamer diameter {reamerImported.Diameter}, expected 0.25");
+            if (reamerImported.Flute_N != 4)
+                throw new Exception($"Reamer flute count {reamerImported.Flute_N}, expected 4");
+
+            Console.WriteLine("PASS (reamer mapped, probe preserved unmapped)");
         }
 
         [TestMethod]

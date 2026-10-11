@@ -42,6 +42,62 @@ namespace ExchangeHSMWorks
                     return "hss";
             }
         }
+        /// <summary>
+        /// HSMWorks tool type strings that are not cutting tools and carry no meaningful
+        /// HSMAdvisor representation (probes, wips, etc.). They are still imported to
+        /// protect against data loss (full source XML is preserved in Aux_data), but they
+        /// are reported via Debug output so the user can remove them if desired.
+        /// See swindex/HSMAdvisorPlugins#6.
+        /// </summary>
+        public static readonly HashSet<string> NonCuttingHSMWorksTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "probe",
+            "wip"
+        };
+
+        /// <summary>
+        /// Returns true if the HSMWorks type string maps to a recognized HSMAdvisor tool type.
+        /// Unknown types are imported with Tool_type_id 0 rather than dropped, to avoid data loss.
+        /// </summary>
+        public static bool IsKnownHSMWorksType(string type)
+        {
+            if (string.IsNullOrEmpty(type))
+                return false;
+
+            switch (type)
+            {
+                case "flat end mill":
+                case "bull nose end mill":
+                case "tapered mill":
+                case "radius mill":
+                case "form mill":
+                case "thread mill":
+                case "ball end mill":
+                case "lollipop mill":
+                case "face mill":
+                case "slot mill":
+                case "chamfer mill":
+                case "center drill":
+                case "drill":
+                case "spot drill":
+                case "counter bore":
+                case "counter sink":
+                case "tap right hand":
+                case "tap left hand":
+                case "boring bar":
+                case "turning threading":
+                case "turning general":
+                case "turning boring":
+                case "turning grooving":
+                case "dovetail mill":
+                case "reamer":
+                    return true;
+                default:
+                    // covers non-cutting types such as probes too
+                    return false;
+            }
+        }
+
         public static Tool ToTool(toollibraryTool t)
         {
             var unitsMetric = t.unit == "millimeters";
@@ -203,12 +259,19 @@ namespace ExchangeHSMWorks
                 case "tap right hand":
                     ret.Tool_type_id = Enums.ToolTypes.Tap;
                     ret.Thread_pitch = Parse.ToDouble(t.body?.threadpitch);
+                    // Some HSMWorks libraries store the tap flute count in
+                    // number-of-flutes instead of number-of-teeth. Fall back so
+                    // the tool doesn't import with zero flutes.
                     ret.Flute_N = Parse.ToInteger(t.body?.numberoffteeth);
+                    if (ret.Flute_N <= 0)
+                        ret.Flute_N = Parse.ToInteger(t.body?.numberofflutes);
                     break;
                 case "tap left hand":
                     ret.Tool_type_id = Enums.ToolTypes.Tap;
                     ret.Thread_pitch = Parse.ToDouble(t.body?.threadpitch);
                     ret.Flute_N = Parse.ToInteger(t.body?.numberoffteeth);
+                    if (ret.Flute_N <= 0)
+                        ret.Flute_N = Parse.ToInteger(t.body?.numberofflutes);
                     break;
                 case "boring bar":
                     ret.Tool_type_id = Enums.ToolTypes.BoringHead;
@@ -251,8 +314,18 @@ namespace ExchangeHSMWorks
                     ret.Toolangle = (-Parse.ToDouble(t.body?.taperangle));
 
                     break;
+                case "reamer":
+                    ret.Tool_type_id = Enums.ToolTypes.Reamer;
+                    break;
                 default:
+                    // Unknown HSMWorks tool types (e.g. probes) are imported with an
+                    // unmapped Tool_type_id so no data is lost - the full source XML is
+                    // preserved in Aux_data and round-trips back on export. Types known
+                    // to be non-cutting (probes) are reported for diagnostics.
+                    // See swindex/HSMAdvisorPlugins#6.
                     ret.Tool_type_id = 0;
+                    if (NonCuttingHSMWorksTypes.Contains(t.type))
+                        Debug.WriteLine($"Imported non-cutting HSMWorks tool type '{t.type}' ({t.description}) without a tool type mapping");
                     break;
 
             }
@@ -299,6 +372,9 @@ namespace ExchangeHSMWorks
             src.tool.ForEach(srcTool =>
             {
                 var tool = ToTool(srcTool);
+
+                // All tools are imported, including unrecognized types (probes etc.),
+                // to protect against data loss. See swindex/HSMAdvisorPlugins#6.
                 tool.Library = libname;
                 targetDB.Tools.Add(tool);
 
@@ -321,11 +397,14 @@ namespace ExchangeHSMWorks
                 }
             });
 
-            Debug.WriteLine(targetDB.Tools[0].Aux_data);
+            if (targetDB.Tools.Count > 0)
+            {
+                Debug.WriteLine(targetDB.Tools[0].Aux_data);
 
-            var tt = Serializer.FromXML<toollibraryTool>(targetDB.Tools[0].Aux_data, false);
+                var tt = Serializer.FromXML<toollibraryTool>(targetDB.Tools[0].Aux_data, false);
 
-            Debug.WriteLine(Serializer.ToXML(tt));
+                Debug.WriteLine(Serializer.ToXML(tt));
+            }
 
             //return new database. HSMAdvisor will SAFELY merge it into it's current database
             return targetDB;
@@ -524,6 +603,10 @@ namespace ExchangeHSMWorks
 
                         break;
 
+                    case Enums.ToolTypes.Reamer:
+                        ret.type = "reamer";
+                        break;
+
                 }
             }
             else
@@ -566,6 +649,9 @@ namespace ExchangeHSMWorks
                     SetIfChanged(originalTool, srcTool.Stickout, originalTool.Stickout, value => EnsureTurningHolder(ret).headlength = Parse.ToString(value));
                     SetIfChanged(originalTool, srcTool.Corner_rad, originalTool.Corner_rad, value => EnsureInsert(ret).cornerradius = Parse.ToString(value));
                     break;
+
+                // Reamer geometry uses only the generic body fields already synced by the
+                // common SetIfChanged calls above - no type-specific handling required.
             }
         }
 

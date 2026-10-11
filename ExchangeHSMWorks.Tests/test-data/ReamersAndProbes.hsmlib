@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<tool-library xmlns="http://www.hsmworks.com/xml/2004/cnc/tool-library" version="1.0">
+
+  <tool guid="A1B2C3D4-0001-4001-8001-000000000001" type="reamer" unit="inches" version="1.5">
+    <description>0.2500 (1/4) DIA Chucking Reamer, 4 Flutes</description>
+    <manufacturer>TEST TOOL</manufacturer>
+    <product-id>REAMER-0250</product-id>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="hss"/>
+    <body body-length="1.75" coolant-support="no" diameter="0.25" flute-length="1.25" number-of-flutes="4" overall-length="3.5" shaft-diameter="0.25" shoulder-length="1.25" thread-pitch="0" thread-profile-angle="60"/>
+    <motion clockwise="yes" cutting-feedrate="20" entry-feedrate="20" exit-feedrate="20" feed-mode="per-minute" plunge-feedrate="10" ramp-feedrate="10" ramp-spindle-rpm="1000" retract-feedrate="0" spindle-rpm="1000"/>
+    <presets>
+      <preset description="" id="{11111111-1111-1111-1111-111111111111}" name="Default Preset" tool_coolant="flood" tool_feedCutting="20" tool_feedEntry="20" tool_feedExit="20" tool_feedPlunge="10" tool_feedRamp="10" tool_rampSpindleSpeed="1000" tool_spindleSpeed="1000"/>
+    </presets>
+  </tool>
+
+  <tool guid="A1B2C3D4-0002-4002-8002-000000000002" type="probe" unit="inches" version="1.5">
+    <description>Renishaw OSP-65 Workpiece Probe</description>
+    <manufacturer>RENISHAW</manufacturer>
+    <product-id>OSP-65</product-id>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="0" manual-tool-change="1" number="0" turret="0"/>
+    <body body-length="2.4" coolant-support="no" diameter="0.0394" overall-length="6.2" shaft-diameter="0.3937"/>
+  </tool>
+
+  <tool guid="A1B2C3D4-0003-4003-8003-000000000003" type="flat end mill" unit="inches" version="1.5">
+    <description>1/4" Flat Endmill</description>
+    <manufacturer>TEST TOOL</manufacturer>
+    <product-id>EM-0250</product-id>
+    <nc break-control="0" diameter-offset="0" length-offset="0" live-tool="1" manual-tool-change="0" number="0" turret="0"/>
+    <coolant mode="flood"/>
+    <material name="carbide"/>
+    <body body-length="1.5" coolant-support="no" diameter="0.25" flute-length="1" number-of-flutes="3" overall-length="3" shaft-diameter="0.25" shoulder-length="1"/>
+    <motion clockwise="yes" cutting-feedrate="40" entry-feedrate="40" exit-feedrate="40" feed-mode="per-minute" plunge-feedrate="20" ramp-feedrate="20" ramp-spindle-rpm="8000" retract-feedrate="0" spindle-rpm="8000"/>
+    <presets>
+      <preset description="" id="{22222222-2222-2222-2222-222222222222}" name="Default Preset" tool_coolant="flood" tool_feedCutting="40" tool_feedEntry="40" tool_feedExit="40" tool_feedPlunge="20" tool_feedRamp="20" tool_rampSpindleSpeed="8000" tool_spindleSpeed="8000"/>
+    </presets>
+  </tool>
+
+</tool-library>
