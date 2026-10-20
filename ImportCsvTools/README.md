@@ -367,7 +367,7 @@ CSV boolean values can be handled flexibly:
 ```json
 {
   "CsvColumn": "HSM Capable",
-  "ToolField": "Hsm",
+  "ToolField": "HSM",
   "ValueMap": [
     {"Key": "Yes", "Value": "true"},
     {"Key": "Y", "Value": "true"},
@@ -384,7 +384,7 @@ Or use expressions:
 ```json
 {
   "CsvColumn": "HSM",
-  "ToolField": "Hsm",
+  "ToolField": "HSM",
   "Expression": "value == \"1\" || value.ToLower() == \"yes\" || value.ToLower() == \"true\""
 }
 ```

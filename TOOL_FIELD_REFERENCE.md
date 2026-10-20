@@ -80,8 +80,8 @@ These fields **MUST** be set for every tool:
 | Rampmilling | bool | Ramp milling capable |
 | Circle_comp | bool | Circle compensation |
 | Circle_external | int | Circle external flag |
-| Hsm | bool | High speed machining |
-| Hss | bool | High speed steel (deprecated, use Tool_material_id) |
+| Chip_Thinning | bool | Radial chip thinning compensation (stored as `chip_thinning`, legacy `hsm`) |
+| HSM | bool | High speed machining (stored as `high_speed_machining`, legacy `hss`) |
 
 ### Tool Management
 

@@ -86,8 +86,8 @@ The following table lists all public fields from `ToolDatabase.Tool`, their type
 | Tool_maxrpm | int | No | Maximum RPM | | `{"CsvColumn": "Max RPM", "ToolField": "Tool_maxrpm"}` |
 | Depth | double | No | Cutting depth | | `{"CsvColumn": "Depth", "ToolField": "Depth"}` |
 | Circle_comp | bool | No | Circle compensation | | `{"CsvColumn": "Circle Comp", "ToolField": "Circle_comp"}` |
-| Hsm | bool | No | High speed machining | | `{"CsvColumn": "HSM", "ToolField": "Hsm"}` |
-| Hss | bool | No | High speed steel | | `{"CsvColumn": "HSS", "ToolField": "Hss"}` |
+| Chip_Thinning | bool | No | Radial chip thinning compensation | | `{"CsvColumn": "Chip Thinning", "ToolField": "Chip_Thinning"}` |
+| HSM | bool | No | High speed machining | | `{"CsvColumn": "HSM", "ToolField": "HSM"}` |
 | Circle_dia | double | No | Circle diameter | | `{"CsvColumn": "Circle Dia", "ToolField": "Circle_dia"}` |
 | Circle_external | int | No | Circle external flag | | `{"CsvColumn": "Circle External", "ToolField": "Circle_external"}` |
 | Thread_pitch | double | No | Thread pitch | | `{"CsvColumn": "Thread Pitch", "ToolField": "Thread_pitch"}` |
